@@ -368,7 +368,14 @@ public class MainActivity extends Activity {
             draw(-1.15f,2.0f,-0.1f,1.75f,1.75f,1.15f,0.12f,0.15f,0.19f);
             draw(-1.15f,2.0f,0.50f,1.42f,1.4f,0.05f,0.28f,0.32f,0.37f);
             draw(-1.15f,2.0f,0.54f,0.95f,0.9f,0.08f,0.10f,0.45f,0.30f);
-            // componentes da placa
+            // Componentes da placa e ventoinha animada do gabinete.
+            float anim=(System.nanoTime()%6000000000L)/6000000000f;
+            float fanAngle=anim*360f;
+            draw(-1.15f,2.0f,0.69f,0.50f,0.50f,0.035f,0.035f,0.055f,0.075f);
+            for(int blade=0;blade<4;blade++){
+                drawRotated(-1.15f,2.0f,0.72f,0.075f,0.38f,0.035f,fanAngle+blade*90f,0.18f,0.72f,0.95f);
+            }
+            draw(-1.15f,2.0f,0.75f,0.13f,0.13f,0.045f,0.72f,0.82f,0.90f);
             draw(-1.45f,2.05f,0.62f,0.36f,0.12f,0.36f,0.75f,0.75f,0.78f);
             draw(-0.85f,2.05f,0.62f,0.22f,0.1f,0.32f,0.75f,0.75f,0.78f);
             if(ram)draw(-0.55f,2.25f,0.58f,0.12f,0.65f,0.18f,0.1f,0.85f,0.45f);else draw(-0.55f,2.25f,0.58f,0.12f,0.65f,0.18f,0.85f,0.65f,0.12f);
@@ -389,9 +396,10 @@ public class MainActivity extends Activity {
             draw(2.85f,1.34f,0.12f,0.78f,0.10f,0.38f,0.09f,0.10f,0.12f);
             draw(2.58f,1.39f,0.12f,0.22f,0.08f,0.18f,0.16f,0.68f,0.42f);
             draw(3.12f,1.39f,0.12f,0.22f,0.08f,0.18f,0.16f,0.68f,0.42f);
-            // cliente aguardando atendimento
+            // Cliente com animação suave de respiração/espera.
+            float idle=(float)Math.sin(System.nanoTime()/420000000.0)*0.035f;
             draw(4.55f,0.58f,-2.0f,0.20f,0.62f,0.22f,0.12f,0.14f,0.19f);
-            draw(4.55f,1.28f,-2.0f,0.52f,0.68f,0.30f,0.16f,0.42f,0.72f);
+            draw(4.55f,1.28f+idle,-2.0f,0.52f,0.68f,0.30f,0.16f,0.42f,0.72f);
             draw(4.55f,1.93f,-2.0f,0.31f,0.32f,0.31f,0.72f,0.50f,0.34f);
             draw(4.55f,2.10f,-2.0f,0.33f,0.12f,0.33f,0.10f,0.075f,0.055f);
             // Personagem do jogador: corpo, cabeça, braços e pernas em estilo low-poly.
@@ -456,6 +464,19 @@ public class MainActivity extends Activity {
             draw(-1.65f,2.72f,0.12f,0.09f,0.09f,0.045f,0.12f,0.95f,0.50f);
             draw(-1.35f,2.72f,0.12f,0.09f,0.09f,0.045f,0.12f,0.55f,0.98f);
             draw(2.05f,2.35f,-0.91f,0.95f,0.035f,0.018f,0.12f,0.82f,0.98f);
+        }
+        void drawRotated(float x,float y,float z,float sx,float sy,float sz,float angle,float r,float g,float b){
+            Matrix.setIdentityM(model,0);
+            Matrix.translateM(model,0,x,y,z);
+            Matrix.rotateM(model,0,angle,0f,0f,1f);
+            Matrix.scaleM(model,0,sx,sy,sz);
+            Matrix.multiplyMM(mvp,0,vp,0,model,0);
+            GLES20.glUniformMatrix4fv(mvpLoc,1,false,mvp,0);
+            GLES20.glUniform4f(colorLoc,r,g,b,1);
+            GLES20.glEnableVertexAttribArray(pos);
+            GLES20.glVertexAttribPointer(pos,3,GLES20.GL_FLOAT,false,0,vertices);
+            GLES20.glDrawElements(GLES20.GL_TRIANGLES,ix.length,GLES20.GL_UNSIGNED_SHORT,indices);
+            GLES20.glDisableVertexAttribArray(pos);
         }
         void draw(float x,float y,float z,float sx,float sy,float sz,float r,float g,float b){
             Matrix.setIdentityM(model,0);Matrix.translateM(model,0,x,y,z);Matrix.scaleM(model,0,sx,sy,sz);Matrix.multiplyMM(mvp,0,vp,0,model,0);
