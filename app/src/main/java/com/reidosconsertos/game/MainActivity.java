@@ -62,7 +62,6 @@ public class MainActivity extends Activity {
         root.addView(shade,new FrameLayout.LayoutParams(-1,-1));
         GLSurfaceView gl=new GLSurfaceView(this);
         glView=gl;
-        gl.setAlpha(0f);
         gl.setEGLContextClientVersion(2);
         renderer=new GameRenderer();
         gl.setRenderer(renderer);
@@ -76,7 +75,7 @@ public class MainActivity extends Activity {
             }
             return true;
         });
-        root.addView(gl);
+        // O cenário 3D antigo fica fora da tela; o cenário fotográfico ocupa o fundo.
         LinearLayout hud=new LinearLayout(this);
         hud.setOrientation(LinearLayout.VERTICAL);
         hud.setPadding(24,16,24,16);
