@@ -218,7 +218,6 @@ public class MainActivity extends Activity {
         TextView appIcon=label("🛒",34,Color.WHITE);appIcon.setGravity(Gravity.CENTER);appTile.addView(appIcon);
         TextView appName=label("PEÇAS",16,Color.WHITE);appName.setGravity(Gravity.CENTER);appTile.addView(appName);
         TextView appDesc=label("Loja de componentes",10,0xFFD5E8F6);appDesc.setGravity(Gravity.CENTER);appTile.addView(appDesc);
-        appTile.setOnClickListener(v->{appTile.animate().scaleX(0.94f).scaleY(0.94f).setDuration(90).withEndAction(()->{dialogDismissSafe(v);showPartsApp();}).start();});
         TextView tip=label("Toque no aplicativo PEÇAS para abrir a loja.",12,0xFFB8D4E9);tip.setPadding(0,dp(18),0,0);desktop.addView(tip);
         LinearLayout bottom=new LinearLayout(this);bottom.setGravity(Gravity.CENTER_VERTICAL);bottom.setPadding(dp(10),dp(9),dp(10),dp(9));bottom.setBackground(round(0xFF172536));
         TextView moneyText=label("CARTEIRA  ·  R$ "+money,13,0xFFFFD166);bottom.addView(moneyText,new LinearLayout.LayoutParams(0,-2,1));
