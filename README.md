@@ -1,6 +1,6 @@
 # Rei dos Consertos
 
-Jogo de simulação de uma assistência técnica, feito para Android.
+Jogo de simulação de uma assistência técnica, feito para Android (versão 0.2.0).
 
 ## Como jogar
 
@@ -8,10 +8,10 @@ Jogo de simulação de uma assistência técnica, feito para Android.
 2. **Peças:** consulte o estoque e selecione o componente necessário.
 3. **Loja:** compre componentes quando o estoque estiver vazio.
 4. **Instalar:** remova a peça antiga e instale a peça correta.
-5. **Testar:** faça os testes antes de entregar o aparelho.
+5. **Testar:** conclua as três etapas de teste antes de entregar o aparelho.
 6. **Entregar:** receba o pagamento e aumente a reputação da assistência.
 
-O jogo inclui serviços de PC gamer, celular, notebook, Nintendo Switch, PlayStation, Xbox e controles Joy-Con.
+Arraste o dedo na área 3D para girar a câmera da oficina. O jogo inclui serviços de PC gamer, celular, notebook, Nintendo Switch, PlayStation, Xbox e controles Joy-Con.
 
 ## Progresso
 
