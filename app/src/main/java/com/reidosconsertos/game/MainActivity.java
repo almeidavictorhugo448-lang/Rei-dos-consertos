@@ -48,6 +48,15 @@ public class MainActivity extends Activity {
         renderer=new GameRenderer();
         gl.setRenderer(renderer);
         gl.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
+        final float[] lastTouchX={0f};
+        gl.setOnTouchListener((view,event)->{
+            if(event.getAction()==android.view.MotionEvent.ACTION_DOWN){lastTouchX[0]=event.getX();return true;}
+            if(event.getAction()==android.view.MotionEvent.ACTION_MOVE){
+                float dx=event.getX()-lastTouchX[0];lastTouchX[0]=event.getX();
+                renderer.rotateCamera(dx*0.008f);return true;
+            }
+            return true;
+        });
         root.addView(gl);
         LinearLayout hud=new LinearLayout(this);
         hud.setOrientation(LinearLayout.VERTICAL);
@@ -158,6 +167,8 @@ public class MainActivity extends Activity {
         FloatBuffer vertices; ShortBuffer indices;
         float[] projection=new float[16], view=new float[16], model=new float[16], vp=new float[16], mvp=new float[16];
         boolean gpu=false,ram=false; int selected=0;
+        volatile float cameraYaw=0.58f;
+        void rotateCamera(float delta){cameraYaw+=delta;}
         final float[] cube={-0.5f,-0.5f,-0.5f, 0.5f,-0.5f,-0.5f, 0.5f,0.5f,-0.5f,-0.5f,0.5f,-0.5f,
           -0.5f,-0.5f,0.5f, 0.5f,-0.5f,0.5f, 0.5f,0.5f,0.5f,-0.5f,0.5f,0.5f};
         final short[] ix={0,1,2,0,2,3,4,6,5,4,7,6,0,4,5,0,5,1,3,2,6,3,6,7,1,5,6,1,6,2,0,3,7,0,7,4};
@@ -175,7 +186,10 @@ public class MainActivity extends Activity {
         @Override public void onSurfaceChanged(GL10 gl,int w,int h){GLES20.glViewport(0,0,w,h);Matrix.perspectiveM(projection,0,48,(float)w/Math.max(1,h),0.1f,100f);}
         @Override public void onDrawFrame(GL10 gl){
             GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT|GLES20.GL_DEPTH_BUFFER_BIT);GLES20.glUseProgram(program);
-            Matrix.setLookAtM(view,0,5.8f,5.2f,8.8f,0,1.1f,0,0,1,0);Matrix.multiplyMM(vp,0,projection,0,view,0);
+            float distance=10.5f;
+            float cameraX=(float)Math.sin(cameraYaw)*distance;
+            float cameraZ=(float)Math.cos(cameraYaw)*distance;
+            Matrix.setLookAtM(view,0,cameraX,5.2f,cameraZ,0,1.1f,0,0,1,0);Matrix.multiplyMM(vp,0,projection,0,view,0);
             draw(0,-0.18f,0,13,0.35f,10,0.34f,0.38f,0.44f);
             draw(0,2.6f,-4.8f,13,5.2f,0.25f,0.7f,0.62f,0.48f);
             draw(-6.3f,2.5f,0,0.25f,5,9,0.25f,0.31f,0.38f);
