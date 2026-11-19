@@ -189,7 +189,7 @@ public class MainActivity extends Activity {
         page.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));
         TextView footer=label("CAIXA DISPONÍVEL: R$ "+money,14,0xFFFFD166);footer.setPadding(0,dp(8),0,0);page.addView(footer);
         AlertDialog dialog=new AlertDialog.Builder(this).setTitle(shop?"LOJA DE COMPONENTES":"DEPÓSITO / INVENTÁRIO").setView(page).setNegativeButton("VOLTAR",null).create();
-        dialog.show();dialog.getWindow().setLayout((int)(getResources().getDisplayMetrics().widthPixels*0.88),dp(520));
+        dialog.show();dialog.getWindow().setLayout((int)(getResources().getDisplayMetrics().widthPixels*0.88),(int)(getResources().getDisplayMetrics().heightPixels*0.82));
     }
     void showParts(){showCatalog(false);}
     void showShop(){showCatalog(true);}
