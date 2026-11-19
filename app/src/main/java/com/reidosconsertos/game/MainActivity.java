@@ -223,6 +223,22 @@ public class MainActivity extends Activity {
             draw(-4.8f,3.1f,-3.7f,2.1f,0.12f,1.0f,0.40f,0.25f,0.14f);
             draw(-5.0f,3.55f,-3.7f,0.55f,0.65f,0.65f,0.15f,0.42f,0.30f);
             draw(-4.35f,3.55f,-3.7f,0.55f,0.65f,0.65f,0.18f,0.20f,0.24f);
+            // telefone e controle em manutenção sobre a bancada
+            draw(0.95f,1.34f,0.62f,0.38f,0.07f,0.62f,0.035f,0.045f,0.06f);
+            draw(0.95f,1.385f,0.62f,0.30f,0.025f,0.52f,0.12f,0.48f,0.76f);
+            draw(2.85f,1.34f,0.12f,0.78f,0.10f,0.38f,0.09f,0.10f,0.12f);
+            draw(2.58f,1.39f,0.12f,0.22f,0.08f,0.18f,0.16f,0.68f,0.42f);
+            draw(3.12f,1.39f,0.12f,0.22f,0.08f,0.18f,0.16f,0.68f,0.42f);
+            // cliente aguardando atendimento
+            draw(4.55f,0.58f,-2.0f,0.20f,0.62f,0.22f,0.12f,0.14f,0.19f);
+            draw(4.55f,1.28f,-2.0f,0.52f,0.68f,0.30f,0.16f,0.42f,0.72f);
+            draw(4.55f,1.93f,-2.0f,0.31f,0.32f,0.31f,0.72f,0.50f,0.34f);
+            draw(4.55f,2.10f,-2.0f,0.33f,0.12f,0.33f,0.10f,0.075f,0.055f);
+            // caixas e aparelhos expostos na prateleira
+            draw(-5.65f,3.55f,-3.7f,0.42f,0.65f,0.62f,0.12f,0.16f,0.22f);
+            draw(-5.65f,3.58f,-3.35f,0.28f,0.48f,0.04f,0.10f,0.50f,0.82f);
+            draw(-3.75f,3.55f,-3.7f,0.58f,0.35f,0.72f,0.08f,0.09f,0.11f);
+            draw(-3.75f,3.78f,-3.7f,0.44f,0.10f,0.58f,0.16f,0.68f,0.42f);
             // luzes e decoração
             draw(0,4.8f,-2.2f,3.4f,0.08f,0.25f,0.95f,0.83f,0.55f);
         }
