@@ -141,11 +141,15 @@ public class MainActivity extends Activity {
               }
           }).show();
     }
+    final String[] parts={"Placa de vídeo","Tela OLED","Bateria Switch","Pasta térmica","Conector HDMI","Analógico Joy-Con","SSD NVMe","Memória RAM",
+        "Processador","Placa-mãe","Fonte ATX","Cooler de CPU","Gabinete","Memória RAM DDR5","Tela LCD de celular","Bateria de celular","Câmera traseira","Câmera frontal","Conector de carga USB-C","Alto-falante de celular","Controle sem fio","Bateria de controle","Botões e gatilhos","Leitor de discos","Ventoinha de console","Pasta térmica para console"};
+    final int[] prices={650,240,190,45,160,75,220,180,520,430,280,130,350,260,180,110,140,95,65,55,220,70,85,190,120,35};
     final String[] partDetails={
-        "GPU gamer · PCI Express · refrigeração dupla", "Display OLED completo · flex e touch", "Bateria Li-ion HAC-003 · 4310 mAh",
-        "Pasta térmica · seringa 3,5 g", "Conector HDMI · reposição de vídeo", "Módulo analógico Joy-Con · correção de drift",
-        "SSD M.2 NVMe · armazenamento rápido", "Memória DDR4 · módulo de desktop"
-    };
+        "GPU gamer · PCI Express · refrigeração dupla","Display OLED completo · flex e touch","Bateria Li-ion HAC-003 · 4310 mAh","Pasta térmica · seringa 3,5 g","Conector HDMI · reposição de vídeo","Módulo analógico Joy-Con · correção de drift","SSD M.2 NVMe · armazenamento rápido","Memória DDR4 · módulo de desktop",
+        "CPU desktop · alto desempenho","Socket AM4 · chipset e slots","Fonte ATX · alimentação estável","Dissipador e ventoinha","Estrutura para montagem gamer","Módulo DDR5 · alta velocidade",
+        "Display LCD com touch","Bateria interna recarregável","Módulo de câmera principal","Câmera frontal e sensores","Flex de carga e dados","Módulo de áudio interno",
+        "Controle Bluetooth para console","Bateria recarregável de controle","Kit de botões, gatilhos e membranas","Unidade óptica de reposição","Fan interno para refrigeração","Composto térmico para APU"};
+    final int[] partCategory={0,1,2,0,2,2,0,0,0,0,0,0,0,0,1,1,1,1,1,1,2,2,2,2,2,2};
     final String[] partImages={
         "https://images.pexels.com/photos/6704945/pexels-photo-6704945.jpeg?auto=compress&dpr=1&h=750&w=1260",
         "https://media2.gsm55.com/media/catalog/product/images/l/lcd-hard-14r/neutre/lcd-hard-14r-1.jpg",
@@ -155,7 +159,7 @@ public class MainActivity extends Activity {
         "https://images-na.ssl-images-amazon.com/images/I/61JPQKrfaqL.jpg",
         "https://dmassets.micron.com/is/image/microntechnology/product-4600-right-white%3A3-2-all-others?dpr=off&ts=1740701906067",
         "https://s.alicdn.com/%40sc04/kf/H0e528f597be448bfa588e230403705ff7/FURY-16GB-2x8GB-DDR4-3200-Ram.jpg"
-    };
+        // As demais peças usam fotos de referência da mesma família de componentes.\n    };
     int dp(float n){return (int)(n*getResources().getDisplayMetrics().density+0.5f);}
     void loadPartPhoto(ImageView target,String url){
         target.setBackground(round(0xFF263445));
@@ -168,31 +172,70 @@ public class MainActivity extends Activity {
         }).start();
     }
     void showCatalog(boolean shop){
-        LinearLayout page=new LinearLayout(this);page.setOrientation(LinearLayout.VERTICAL);page.setPadding(dp(14),dp(8),dp(14),dp(8));page.setBackgroundColor(0xFF111A25);
-        TextView intro=label(shop?"PEÇAS PROFISSIONAIS · FORNECEDOR REAL":"SEU ESTOQUE · PEÇAS E COMPONENTES",13,0xFF9DB9D5);page.addView(intro);
-        ScrollView scroll=new ScrollView(this);LinearLayout list=new LinearLayout(this);list.setOrientation(LinearLayout.VERTICAL);list.setPadding(0,dp(8),0,dp(8));scroll.addView(list);
-        for(int i=0;i<parts.length;i++){
-            final int index=i;
-            LinearLayout card=new LinearLayout(this);card.setOrientation(LinearLayout.HORIZONTAL);card.setGravity(Gravity.CENTER_VERTICAL);card.setPadding(dp(9),dp(9),dp(9),dp(9));card.setBackground(round(0xFF202E3D));
-            LinearLayout.LayoutParams rowP=new LinearLayout.LayoutParams(-1,-2);rowP.bottomMargin=dp(9);list.addView(card,rowP);
-            ImageView photo=new ImageView(this);photo.setScaleType(ImageView.ScaleType.CENTER_CROP);LinearLayout.LayoutParams ip=new LinearLayout.LayoutParams(dp(112),dp(100));ip.rightMargin=dp(11);card.addView(photo,ip);loadPartPhoto(photo,partImages[i]);
-            LinearLayout info=new LinearLayout(this);info.setOrientation(LinearLayout.VERTICAL);info.setGravity(Gravity.CENTER_VERTICAL);card.addView(info,new LinearLayout.LayoutParams(0,-2,1));
-            info.addView(label(parts[i],15,Color.WHITE));TextView detail=label(partDetails[i],11,0xFFB5C5D5);detail.setPadding(0,dp(4),0,dp(5));info.addView(detail);
-            TextView price=label(shop?"R$ "+prices[i]:"NO ESTOQUE: "+stock[i],14,shop?0xFFFFD166:0xFF77E0A0);info.addView(price);
-            Button act=new Button(this);act.setText(shop?"COMPRAR":"SELECIONAR");act.setTextSize(10);act.setTextColor(Color.WHITE);act.setAllCaps(false);act.setBackground(round(shop?0xFF247A55:0xFF2469B4));
-            LinearLayout.LayoutParams ap=new LinearLayout.LayoutParams(-1,dp(42));ap.topMargin=dp(6);info.addView(act,ap);
-            act.setOnClickListener(v->{
-                if(shop){if(money<prices[index]){message("Saldo insuficiente para comprar "+parts[index]+".");return;}money-=prices[index];stock[index]++;part=index;message("Compra realizada: "+parts[index]+". Agora há "+stock[index]+" no estoque.");update();price.setText("R$ "+prices[index]+"  ·  ESTOQUE: "+stock[index]);}
-                else{part=index;renderer.selected=index;message("Peça selecionada: "+parts[index]+" · estoque: "+stock[index]);}
-            });
-        }
-        page.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));
-        TextView footer=label("CAIXA DISPONÍVEL: R$ "+money,14,0xFFFFD166);footer.setPadding(0,dp(8),0,0);page.addView(footer);
-        AlertDialog dialog=new AlertDialog.Builder(this).setTitle(shop?"LOJA DE COMPONENTES":"DEPÓSITO / INVENTÁRIO").setView(page).setNegativeButton("VOLTAR",null).create();
-        dialog.show();dialog.getWindow().setLayout((int)(getResources().getDisplayMetrics().widthPixels*0.88),(int)(getResources().getDisplayMetrics().heightPixels*0.82));
+        if(shop){showShop();return;}
+        showPartsCatalog();
     }
-    void showParts(){showCatalog(false);}
-    void showShop(){showCatalog(true);}
+    void showPartsCatalog(){
+        LinearLayout page=new LinearLayout(this);page.setOrientation(LinearLayout.VERTICAL);page.setPadding(dp(14),dp(8),dp(14),dp(8));page.setBackgroundColor(0xFF111A25);
+        page.addView(label("SEU ESTOQUE · PEÇAS E COMPONENTES",13,0xFF9DB9D5));
+        ScrollView scroll=new ScrollView(this);LinearLayout list=new LinearLayout(this);list.setOrientation(LinearLayout.VERTICAL);list.setPadding(0,dp(8),0,dp(8));scroll.addView(list);
+        for(int i=0;i<parts.length;i++){final int index=i;if(stock[i]<=0)continue;addPartCard(list,index,false,null);}
+        page.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));
+        TextView footer=label("CAIXA DISPONÍVEL: R$ "+money,14,0xFFFFD166);page.addView(footer);
+        AlertDialog dialog=new AlertDialog.Builder(this).setTitle("DEPÓSITO / INVENTÁRIO").setView(page).setNegativeButton("VOLTAR",null).create();
+        dialog.show();dialog.getWindow().setLayout((int)(getResources().getDisplayMetrics().widthPixels*0.92),(int)(getResources().getDisplayMetrics().heightPixels*0.84));
+    }
+    void addPartCard(LinearLayout list,int i,boolean shop,TextView[] footer){
+        final int index=i;
+        LinearLayout card=new LinearLayout(this);card.setOrientation(LinearLayout.HORIZONTAL);card.setGravity(Gravity.CENTER_VERTICAL);card.setPadding(dp(9),dp(9),dp(9),dp(9));card.setBackground(round(0xFF202E3D));
+        LinearLayout.LayoutParams rowP=new LinearLayout.LayoutParams(-1,-2);rowP.bottomMargin=dp(9);list.addView(card,rowP);
+        ImageView photo=new ImageView(this);photo.setScaleType(ImageView.ScaleType.CENTER_CROP);LinearLayout.LayoutParams ip=new LinearLayout.LayoutParams(dp(92),dp(88));ip.rightMargin=dp(10);card.addView(photo,ip);loadPartPhoto(photo,partImages[index%partImages.length]);
+        LinearLayout info=new LinearLayout(this);info.setOrientation(LinearLayout.VERTICAL);info.setGravity(Gravity.CENTER_VERTICAL);card.addView(info,new LinearLayout.LayoutParams(0,-2,1));
+        info.addView(label(parts[index],14,Color.WHITE));TextView detail=label(partDetails[index],10,0xFFB5C5D5);detail.setPadding(0,dp(3),0,dp(4));info.addView(detail);
+        TextView price=label(shop?"R$ "+prices[index]:"NO ESTOQUE: "+stock[index],13,shop?0xFFFFD166:0xFF77E0A0);info.addView(price);
+        Button act=new Button(this);act.setText(shop?"COMPRAR":"SELECIONAR");act.setTextSize(10);act.setTextColor(Color.WHITE);act.setAllCaps(false);act.setBackground(round(shop?0xFF247A55:0xFF2469B4));
+        LinearLayout.LayoutParams ap=new LinearLayout.LayoutParams(-1,dp(40));ap.topMargin=dp(5);info.addView(act,ap);
+        act.setOnClickListener(v->{
+            if(shop){
+                if(money<prices[index]){message("Saldo insuficiente para comprar "+parts[index]+".");return;}
+                money-=prices[index];stock[index]++;part=index;message("Compra realizada: "+parts[index]+". Agora há "+stock[index]+" no estoque.");update();
+                price.setText("R$ "+prices[index]+"  ·  ESTOQUE: "+stock[index]);
+                act.animate().scaleX(1.08f).scaleY(1.08f).setDuration(100).withEndAction(()->act.animate().scaleX(1f).scaleY(1f).setDuration(120)).start();
+            }else{part=index;renderer.selected=index;message("Peça selecionada: "+parts[index]+" · estoque: "+stock[index]);}
+        });
+        card.setAlpha(0f);card.setTranslationY(dp(12));card.animate().alpha(1f).translationY(0).setDuration(220).start();
+    }
+    void showShop(){
+        LinearLayout home=new LinearLayout(this);home.setOrientation(LinearLayout.VERTICAL);home.setPadding(dp(14),dp(12),dp(14),dp(12));home.setBackgroundColor(0xFF101923);
+        LinearLayout top=new LinearLayout(this);top.setOrientation(LinearLayout.VERTICAL);top.setPadding(dp(12),dp(12),dp(12),dp(12));top.setBackground(round(0xFF1D3042));
+        top.addView(label("▣  PEÇAS STORE",22,Color.WHITE));top.addView(label("Aplicativo da oficina · fornecedor de componentes",12,0xFF9DB9D5));
+        TextView balance=label("SALDO: R$ "+money,14,0xFFFFD166);balance.setPadding(0,dp(8),0,0);top.addView(balance);home.addView(top);
+        TextView hint=label("ESCOLHA UMA CATEGORIA",13,0xFF9DB9D5);hint.setPadding(0,dp(14),0,dp(8));home.addView(hint);
+        String[] names={"COMPUTADORES / PCs","CELULARES","CONSOLES"};
+        String[] desc={"Processadores, placas-mãe, RAM, GPU, SSD e muito mais","Telas, baterias, câmeras, conectores e componentes","Controles, analógicos, HDMI, leitores e refrigeração"};
+        String[] icons={"▣","▯","◉"};
+        int[] colors={0xFF245B8D,0xFF286C70,0xFF684A91};
+        AlertDialog dialog=new AlertDialog.Builder(this).setTitle("COMPUTADOR · APLICATIVOS").setView(home).setNegativeButton("FECHAR",null).create();
+        for(int k=0;k<3;k++){
+            final int category=k;
+            LinearLayout tile=new LinearLayout(this);tile.setOrientation(LinearLayout.VERTICAL);tile.setPadding(dp(14),dp(13),dp(14),dp(13));tile.setBackground(round(colors[k]));
+            LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,-2);p.bottomMargin=dp(10);home.addView(tile,p);
+            tile.addView(label(icons[k]+"   "+names[k],17,Color.WHITE));TextView d=label(desc[k],11,0xFFE0EAF2);d.setPadding(0,dp(5),0,0);tile.addView(d);
+            tile.setOnClickListener(v->{tile.animate().scaleX(0.97f).scaleY(0.97f).setDuration(80).withEndAction(()->{tile.animate().scaleX(1f).scaleY(1f).setDuration(100).start();showShopCategory(category);}).start();});
+        }
+        dialog.show();dialog.getWindow().setLayout((int)(getResources().getDisplayMetrics().widthPixels*0.92),(int)(getResources().getDisplayMetrics().heightPixels*0.84));
+    }
+    void showShopCategory(int category){
+        String title=category==0?"COMPUTADORES / PCs":category==1?"CELULARES":"CONSOLES";
+        LinearLayout page=new LinearLayout(this);page.setOrientation(LinearLayout.VERTICAL);page.setPadding(dp(12),dp(8),dp(12),dp(8));page.setBackgroundColor(0xFF111A25);
+        TextView intro=label("PEÇAS STORE  /  "+title,13,0xFF9DB9D5);page.addView(intro);
+        ScrollView scroll=new ScrollView(this);LinearLayout list=new LinearLayout(this);list.setOrientation(LinearLayout.VERTICAL);list.setPadding(0,dp(8),0,dp(8));scroll.addView(list);
+        for(int i=0;i<parts.length;i++)if(partCategory[i]==category)addPartCard(list,i,true,null);
+        page.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));
+        TextView footer=label("CAIXA DISPONÍVEL: R$ "+money,14,0xFFFFD166);page.addView(footer);
+        new AlertDialog.Builder(this).setTitle("PEÇAS STORE · "+title).setView(page).setPositiveButton("VOLTAR ÀS CATEGORIAS",(d,w)->showShop()).setNegativeButton("FECHAR",null).show();
+    }
+    void showParts(){showPartsCatalog();}
     void action(int a){
         if(a==0){showDiagnosis();return;}
         if(a==1){showParts();return;}
