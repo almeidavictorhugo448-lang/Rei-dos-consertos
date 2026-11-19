@@ -281,7 +281,7 @@ public class MainActivity extends Activity {
             LinearLayout tile=new LinearLayout(this);tile.setOrientation(LinearLayout.VERTICAL);tile.setPadding(dp(14),dp(13),dp(14),dp(13));tile.setBackground(round(colors[k]));
             LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,-2);p.bottomMargin=dp(10);home.addView(tile,p);
             tile.addView(label(icons[k]+"   "+names[k],17,Color.WHITE));TextView d=label(desc[k],11,0xFFE0EAF2);d.setPadding(0,dp(5),0,0);tile.addView(d);
-            tile.setOnClickListener(v->{tile.animate().scaleX(0.97f).scaleY(0.97f).setDuration(80).withEndAction(()->{tile.animate().scaleX(1f).scaleY(1f).setDuration(100).start();showShopCategory(category);}).start();});
+            tile.setOnClickListener(v->{tile.animate().scaleX(0.97f).scaleY(0.97f).setDuration(80).withEndAction(()->{tile.animate().scaleX(1f).scaleY(1f).setDuration(100).start();dialog.dismiss();showShopCategory(category);}).start();});
         }
         dialog.show();dialog.getWindow().setLayout((int)(getResources().getDisplayMetrics().widthPixels*0.92),(int)(getResources().getDisplayMetrics().heightPixels*0.84));
     }
