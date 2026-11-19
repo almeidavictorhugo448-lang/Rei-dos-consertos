@@ -80,7 +80,7 @@ public class MainActivity extends Activity {
         hud.setBackground(round(0xC90B1420));
         status=label("REI DOS CONSERTOS     CAIXA: R$ "+money+"     ★ "+reputation+"     DIA "+day,17,Color.WHITE);
         hud.addView(status);
-        task=label("PEDIDO: "+jobs[job]+"  |  Arraste para girar a oficina e comece pelo diagnóstico.",14,0xFFFFD66B);
+        task=label("PEDIDO: "+jobs[job]+"  |  Arraste no lado esquerdo para andar e no direito para girar a câmera.",14,0xFFFFD66B);
         LinearLayout.LayoutParams tp=new LinearLayout.LayoutParams(-1,-2); tp.topMargin=8; hud.addView(task,tp);
         FrameLayout.LayoutParams hp=new FrameLayout.LayoutParams(-1,-2,Gravity.TOP); root.addView(hud,hp);
 
