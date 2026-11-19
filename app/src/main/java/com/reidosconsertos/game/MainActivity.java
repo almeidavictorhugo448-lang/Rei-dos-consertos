@@ -1,6 +1,8 @@
 package com.reidosconsertos.game;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLES20;
@@ -26,15 +28,20 @@ import javax.microedition.khronos.opengles.GL10;
 public class MainActivity extends Activity {
     GameRenderer renderer;
     TextView status, task;
-    int money=2000, reputation=50, day=1, part=0, screen=0, job=0;
-    boolean gpuInstalled=false, ramInstalled=false, sideOpen=true;
-    String[] jobs={"PC gamer não liga","Celular com tela quebrada","Nintendo Switch não carrega","PlayStation superaquecendo","Xbox sem imagem"};
-    String[] parts={"Placa de vídeo","Memória RAM","Gabinete","Tela do celular","Bateria do Switch"};
-    int[] prices={650,180,320,240,190};
+    int money=2000, reputation=50, day=1, part=0, job=0, completed=0;
+    boolean gpuInstalled=false, ramInstalled=false, diagnosed=false, removed=false, installed=false, tested=false;
+    final String[] jobs={"PC gamer não liga","Celular com tela quebrada","Nintendo Switch não carrega","PlayStation superaquecendo","Xbox sem imagem","Joy-Con com drift","Notebook lento","PC gamer sem vídeo"};
+    final String[] parts={"Placa de vídeo","Tela OLED","Bateria Switch","Pasta térmica","Porta HDMI","Analógico Joy-Con","SSD NVMe","Memória RAM"};
+    final int[] prices={650,240,190,45,160,75,220,180};
+    final int[] rewards={520,360,410,390,430,260,340,470};
+    int[] stock={0,0,0,0,0,0,0,0};
+    SharedPreferences prefs;
 
     @Override public void onCreate(Bundle b){
         super.onCreate(b);
         getWindow().getDecorView().setSystemUiVisibility(5894|1024|512|4096);
+        prefs=getSharedPreferences("rei_dos_consertos_save",MODE_PRIVATE);
+        loadGame();
         FrameLayout root=new FrameLayout(this);
         GLSurfaceView gl=new GLSurfaceView(this);
         gl.setEGLContextClientVersion(2);
@@ -46,9 +53,9 @@ public class MainActivity extends Activity {
         hud.setOrientation(LinearLayout.VERTICAL);
         hud.setPadding(22,14,22,14);
         hud.setBackgroundColor(0xAA111A25);
-        status=label("REI DOS CONSERTOS     CAIXA: R$ 2.000     ★ 50     DIA 1",19,Color.WHITE);
+        status=label("REI DOS CONSERTOS     CAIXA: R$ "+money+"     ★ "+reputation+"     DIA "+day,17,Color.WHITE);
         hud.addView(status);
-        task=label("CLIENTE: "+jobs[0]+"  |  Toque nas peças da bancada para interagir.",14,0xFFFFD66B);
+        task=label("PEDIDO: "+jobs[job]+"  |  Comece pelo diagnóstico.",14,0xFFFFD66B);
         LinearLayout.LayoutParams tp=new LinearLayout.LayoutParams(-1,-2); tp.topMargin=8; hud.addView(task,tp);
         FrameLayout.LayoutParams hp=new FrameLayout.LayoutParams(-1,-2,Gravity.TOP); root.addView(hud,hp);
 
@@ -56,7 +63,7 @@ public class MainActivity extends Activity {
         controls.setGravity(Gravity.CENTER);
         controls.setPadding(8,8,8,8);
         controls.setBackgroundColor(0xCC111A25);
-        String[] names={"PEÇAS","INSTALAR / REMOVER","LOJA","ATENDER CLIENTE"};
+        String[] names={"DIAGNÓSTICO","PEÇAS","INSTALAR","TESTAR","ENTREGAR","LOJA"};
         for(int i=0;i<names.length;i++){
             final int id=i;
             Button bt=new Button(this); bt.setText(names[i]); bt.setTextSize(11); bt.setTextColor(Color.WHITE);
@@ -69,16 +76,81 @@ public class MainActivity extends Activity {
     }
     TextView label(String s,int size,int color){TextView t=new TextView(this);t.setText(s);t.setTextSize(size);t.setTextColor(color);t.setTypeface(Typeface.DEFAULT,Typeface.BOLD);return t;}
     GradientDrawable round(int color){GradientDrawable d=new GradientDrawable();d.setColor(color);d.setCornerRadius(18);return d;}
-    void update(){status.setText("REI DOS CONSERTOS     CAIXA: R$ "+money+"     ★ "+reputation+"     DIA "+day);}
+    void update(){
+        status.setText("REI DOS CONSERTOS   R$ "+money+"   ★ "+reputation+"   DIA "+day+"   SERVIÇOS "+completed);
+        saveGame();
+    }
+    void message(String text){task.setText(text);}
+    void loadGame(){
+        money=prefs.getInt("money",2000); reputation=prefs.getInt("rep",50); day=prefs.getInt("day",1);
+        job=prefs.getInt("job",0); completed=prefs.getInt("completed",0);
+        for(int i=0;i<stock.length;i++) stock[i]=prefs.getInt("stock_"+i,0);
+    }
+    void saveGame(){
+        if(prefs==null)return;
+        SharedPreferences.Editor e=prefs.edit().putInt("money",money).putInt("rep",reputation).putInt("day",day).putInt("job",job).putInt("completed",completed);
+        for(int i=0;i<stock.length;i++)e.putInt("stock_"+i,stock[i]);
+        e.apply();
+    }
+    void showDiagnosis(){
+        String[] options={parts[job],"Carregador / cabo","Limpeza externa"};
+        new AlertDialog.Builder(this).setTitle("Diagnóstico: "+jobs[job])
+          .setMessage("Leia o pedido do cliente e escolha a peça que provavelmente está com defeito.")
+          .setItems(options,(d,which)->{
+              if(options[which].equals(parts[job])){
+                  diagnosed=true; removed=false; installed=false; tested=false;
+                  message("Diagnóstico correto! Agora abra PEÇAS e separe: "+parts[job]+".");
+              }else{
+                  reputation=Math.max(0,reputation-2);
+                  message("Diagnóstico incorreto. O cliente perdeu a confiança. Tente novamente.");
+                  update();
+              }
+          }).show();
+    }
+    void showParts(){
+        String[] rows=new String[parts.length];
+        for(int i=0;i<parts.length;i++)rows[i]=parts[i]+"  ·  estoque: "+stock[i]+"  ·  "+(i==job?"NECESSÁRIA":"R$ "+prices[i]);
+        new AlertDialog.Builder(this).setTitle("Depósito de peças").setItems(rows,(d,which)->{
+            part=which;
+            message("Selecionada: "+parts[part]+". Estoque: "+stock[part]+".");
+            renderer.selected=part;
+        }).setNegativeButton("Fechar",null).show();
+    }
+    void showShop(){
+        String[] rows=new String[parts.length];
+        for(int i=0;i<parts.length;i++)rows[i]=parts[i]+"  —  R$ "+prices[i];
+        new AlertDialog.Builder(this).setTitle("Loja de componentes · Caixa R$ "+money)
+          .setItems(rows,(d,which)->{
+              if(money<prices[which]){message("Dinheiro insuficiente para comprar "+parts[which]+".");return;}
+              money-=prices[which];stock[which]++;part=which;
+              message("Comprado: "+parts[which]+". Estoque agora: "+stock[which]+".");
+              update();
+          }).setNegativeButton("Fechar",null).show();
+    }
     void action(int a){
-        if(a==0){part=(part+1)%5;renderer.selected=part;task.setText("PEÇA SELECIONADA: "+parts[part]+"  |  Valor: R$ "+prices[part]);}
-        if(a==1){
-            if(money>=prices[part]){money-=prices[part]; if(part==0)gpuInstalled=!gpuInstalled; if(part==1)ramInstalled=!ramInstalled; renderer.gpu=gpuInstalled;renderer.ram=ramInstalled;task.setText(parts[part]+(part<2?(part==0?(gpuInstalled?" instalada!":" removida."): (ramInstalled?" instalada!":" removida.")):" pronta para reparo."));}
-            else task.setText("Dinheiro insuficiente! Visite a loja e atenda clientes.");
+        if(a==0){showDiagnosis();return;}
+        if(a==1){showParts();return;}
+        if(a==2){
+            if(!diagnosed){message("Faça o diagnóstico antes de instalar qualquer peça.");return;}
+            if(part!=job){message("A peça selecionada não corresponde ao defeito. Selecione "+parts[job]+".");return;}
+            if(stock[job]<=0){message("Você não tem "+parts[job]+" no estoque. Abra a LOJA.");return;}
+            if(!removed){removed=true;message("Peça antiga removida com cuidado. Toque em INSTALAR novamente.");return;}
+            stock[job]--;installed=true;gpuInstalled=(job==0);ramInstalled=(job==7);
+            renderer.gpu=gpuInstalled;renderer.ram=ramInstalled;
+            message(parts[job]+" instalada! Agora faça o TESTE de funcionamento.");update();return;
         }
-        if(a==2){money+=0;task.setText("LOJA: "+parts[part]+" custa R$ "+prices[part]+". Use INSTALAR / REMOVER para comprar e aplicar.");}
-        if(a==3){int reward=220+job*35;money+=reward;reputation=Math.min(100,reputation+3);job=(job+1)%jobs.length;day++;task.setText("SERVIÇO concluído! Você recebeu R$ "+reward+". Próximo: "+jobs[job]);}
-        update();
+        if(a==3){
+            if(!installed){message("Instale a peça correta antes de testar o aparelho.");return;}
+            tested=true;message("Teste concluído: aparelho funcionando. Você já pode ENTREGAR ao cliente.");return;
+        }
+        if(a==4){
+            if(!tested){message("Ainda falta testar o aparelho. Não entregue um conserto sem teste.");return;}
+            int reward=rewards[job];money+=reward;reputation=Math.min(100,reputation+4);completed++;
+            message("Conserto aprovado! +R$ "+reward+" · reputação +4. Próximo cliente: "+jobs[(job+1)%jobs.length]);
+            job=(job+1)%jobs.length;diagnosed=false;removed=false;installed=false;tested=false;day++;
+            update();return;
+        }
+        if(a==5){showShop();}
     }
 
     static class GameRenderer implements GLSurfaceView.Renderer {
