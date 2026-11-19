@@ -35,6 +35,7 @@ public class MainActivity extends Activity {
     final int[] prices={650,240,190,45,160,75,220,180};
     final int[] rewards={520,360,410,390,430,260,340,470};
     int[] stock={0,0,0,0,0,0,0,0};
+    int testStep=0;
     SharedPreferences prefs;
 
     @Override public void onCreate(Bundle b){
@@ -64,7 +65,7 @@ public class MainActivity extends Activity {
         hud.setBackgroundColor(0xAA111A25);
         status=label("REI DOS CONSERTOS     CAIXA: R$ "+money+"     ★ "+reputation+"     DIA "+day,17,Color.WHITE);
         hud.addView(status);
-        task=label("PEDIDO: "+jobs[job]+"  |  Comece pelo diagnóstico.",14,0xFFFFD66B);
+        task=label("PEDIDO: "+jobs[job]+"  |  Arraste para girar a oficina e comece pelo diagnóstico.",14,0xFFFFD66B);
         LinearLayout.LayoutParams tp=new LinearLayout.LayoutParams(-1,-2); tp.topMargin=8; hud.addView(task,tp);
         FrameLayout.LayoutParams hp=new FrameLayout.LayoutParams(-1,-2,Gravity.TOP); root.addView(hud,hp);
 
@@ -107,7 +108,7 @@ public class MainActivity extends Activity {
           .setMessage("Leia o pedido do cliente e escolha a peça que provavelmente está com defeito.")
           .setItems(options,(d,which)->{
               if(options[which].equals(parts[job])){
-                  diagnosed=true; removed=false; installed=false; tested=false;
+                  diagnosed=true; removed=false; installed=false; tested=false; testStep=0;
                   message("Diagnóstico correto! Agora abra PEÇAS e separe: "+parts[job]+".");
               }else{
                   reputation=Math.max(0,reputation-2);
@@ -150,13 +151,15 @@ public class MainActivity extends Activity {
         }
         if(a==3){
             if(!installed){message("Instale a peça correta antes de testar o aparelho.");return;}
-            tested=true;message("Teste concluído: aparelho funcionando. Você já pode ENTREGAR ao cliente.");return;
+            testStep++;
+            if(testStep<3){message("Teste "+testStep+"/3 concluído. Verifique mais uma etapa antes de entregar.");return;}
+            tested=true;message("Todos os testes passaram! Aparelho funcionando. Você já pode ENTREGAR ao cliente.");return;
         }
         if(a==4){
             if(!tested){message("Ainda falta testar o aparelho. Não entregue um conserto sem teste.");return;}
             int reward=rewards[job];money+=reward;reputation=Math.min(100,reputation+4);completed++;
             message("Conserto aprovado! +R$ "+reward+" · reputação +4. Próximo cliente: "+jobs[(job+1)%jobs.length]);
-            job=(job+1)%jobs.length;diagnosed=false;removed=false;installed=false;tested=false;day++;
+            job=(job+1)%jobs.length;diagnosed=false;removed=false;installed=false;tested=false;testStep=0;day++;
             update();return;
         }
         if(a==5){showShop();}
