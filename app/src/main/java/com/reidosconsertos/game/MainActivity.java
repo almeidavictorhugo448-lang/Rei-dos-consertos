@@ -40,8 +40,6 @@ public class MainActivity extends Activity {
     int money=2000, reputation=50, day=1, part=0, job=0, completed=0;
     boolean gpuInstalled=false, ramInstalled=false, diagnosed=false, removed=false, installed=false, tested=false;
     final String[] jobs={"PC gamer não liga","Celular com tela quebrada","Nintendo Switch não carrega","PlayStation superaquecendo","Xbox sem imagem","Joy-Con com drift","Notebook lento","PC gamer sem vídeo"};
-    final String[] parts={"Placa de vídeo","Tela OLED","Bateria Switch","Pasta térmica","Porta HDMI","Analógico Joy-Con","SSD NVMe","Memória RAM"};
-    final int[] prices={650,240,190,45,160,75,220,180};
     final int[] rewards={520,360,410,390,430,260,340,470};
     int[] stock=new int[26];
     int testStep=0;
