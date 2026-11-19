@@ -3,5 +3,5 @@ plugins { id 'com.android.application' }
 android {
     namespace 'com.reidosconsertos.game'
     compileSdk 35
-    defaultConfig { applicationId 'com.reidosconsertos.game'; minSdk 23; targetSdk 35; versionCode 2; versionName '0.2.0' }
+    defaultConfig { applicationId 'com.reidosconsertos.game'; minSdk 23; targetSdk 35; versionCode 3; versionName '0.3.0' }
 }
