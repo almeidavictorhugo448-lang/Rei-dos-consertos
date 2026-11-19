@@ -27,6 +27,7 @@ import javax.microedition.khronos.opengles.GL10;
 
 public class MainActivity extends Activity {
     GameRenderer renderer;
+    GLSurfaceView glView;
     TextView status, task;
     int money=2000, reputation=50, day=1, part=0, job=0, completed=0;
     boolean gpuInstalled=false, ramInstalled=false, diagnosed=false, removed=false, installed=false, tested=false;
@@ -45,6 +46,7 @@ public class MainActivity extends Activity {
         loadGame();
         FrameLayout root=new FrameLayout(this);
         GLSurfaceView gl=new GLSurfaceView(this);
+        glView=gl;
         gl.setEGLContextClientVersion(2);
         renderer=new GameRenderer();
         gl.setRenderer(renderer);
@@ -86,6 +88,15 @@ public class MainActivity extends Activity {
     }
     TextView label(String s,int size,int color){TextView t=new TextView(this);t.setText(s);t.setTextSize(size);t.setTextColor(color);t.setTypeface(Typeface.DEFAULT,Typeface.BOLD);return t;}
     GradientDrawable round(int color){GradientDrawable d=new GradientDrawable();d.setColor(color);d.setCornerRadius(18);return d;}
+    @Override protected void onPause(){
+        saveGame();
+        if(glView!=null)glView.onPause();
+        super.onPause();
+    }
+    @Override protected void onResume(){
+        super.onResume();
+        if(glView!=null)glView.onResume();
+    }
     void update(){
         status.setText("REI DOS CONSERTOS   R$ "+money+"   ★ "+reputation+"   DIA "+day+"   SERVIÇOS "+completed);
         saveGame();
@@ -94,6 +105,7 @@ public class MainActivity extends Activity {
     void loadGame(){
         money=prefs.getInt("money",2000); reputation=prefs.getInt("rep",50); day=prefs.getInt("day",1);
         job=Math.max(0,Math.min(jobs.length-1,prefs.getInt("job",0)));
+        part=job;
         completed=Math.max(0,prefs.getInt("completed",0));
         money=Math.max(0,money); reputation=Math.max(0,Math.min(100,reputation)); day=Math.max(1,day);
         for(int i=0;i<stock.length;i++) stock[i]=prefs.getInt("stock_"+i,0);
