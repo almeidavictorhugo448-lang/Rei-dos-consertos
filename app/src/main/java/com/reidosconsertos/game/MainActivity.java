@@ -373,8 +373,55 @@ public class MainActivity extends Activity {
             draw(-5.65f,3.58f,-3.35f,0.28f,0.48f,0.04f,0.10f,0.50f,0.82f);
             draw(-3.75f,3.55f,-3.7f,0.58f,0.35f,0.72f,0.08f,0.09f,0.11f);
             draw(-3.75f,3.78f,-3.7f,0.44f,0.10f,0.58f,0.16f,0.68f,0.42f);
-            // luzes e decoração
+            // iluminação principal e decoração premium
             draw(0,4.8f,-2.2f,3.4f,0.08f,0.25f,0.95f,0.83f,0.55f);
+            // piso em placas com linhas de separação
+            for(int x=-5;x<=5;x+=2)draw(x,0.012f,0,0.018f,0.012f,8.8f,0.20f,0.29f,0.38f);
+            for(int z=-3;z<=4;z+=2)draw(0,0.013f,z,11.8f,0.012f,0.018f,0.20f,0.29f,0.38f);
+            // rodapés e painéis decorativos da oficina
+            draw(0,0.28f,-4.66f,12.4f,0.18f,0.12f,0.10f,0.22f,0.32f);
+            draw(-6.12f,2.5f,0,0.12f,4.7f,8.7f,0.12f,0.22f,0.31f);
+            draw(6.12f,2.5f,0,0.12f,4.7f,8.7f,0.12f,0.22f,0.31f);
+            // painéis de ferramentas na parede esquerda
+            draw(-5.95f,3.35f,-1.0f,0.08f,1.65f,2.7f,0.055f,0.075f,0.10f);
+            for(int k=0;k<5;k++){
+                float yy=2.75f+k*0.28f;
+                draw(-5.82f,yy,-1.85f,0.10f,0.055f,0.48f,0.76f,0.80f,0.84f);
+                draw(-5.82f,yy,-0.85f,0.10f,0.055f,0.48f,0.76f,0.80f,0.84f);
+            }
+            // armários inferiores e gavetas da bancada
+            draw(0,0.76f,-0.25f,6.1f,0.62f,2.65f,0.12f,0.17f,0.23f);
+            for(int x=-2;x<=2;x+=2){
+                draw(x,0.82f,1.10f,1.55f,0.42f,0.045f,0.18f,0.25f,0.33f);
+                draw(x,0.82f,1.15f,0.32f,0.045f,0.035f,0.70f,0.76f,0.82f);
+            }
+            // teclado, mousepad e mouse
+            draw(2.05f,1.39f,0.15f,1.35f,0.035f,0.48f,0.035f,0.055f,0.075f);
+            for(int k=0;k<6;k++)draw(1.52f+k*0.19f,1.43f,0.15f,0.12f,0.035f,0.30f,0.50f,0.64f,0.72f);
+            draw(2.95f,1.43f,-0.15f,0.20f,0.07f,0.28f,0.72f,0.78f,0.84f);
+            // luminárias suspensas e faixas LED
+            draw(-3.6f,4.65f,-1.2f,0.10f,0.55f,0.10f,0.22f,0.29f,0.36f);
+            draw(-3.6f,4.35f,-1.2f,0.65f,0.08f,0.42f,0.20f,0.72f,0.95f);
+            draw(3.5f,4.65f,-1.2f,0.10f,0.55f,0.10f,0.22f,0.29f,0.36f);
+            draw(3.5f,4.35f,-1.2f,0.65f,0.08f,0.42f,0.20f,0.72f,0.95f);
+            // letreiro iluminado no fundo
+            draw(0,4.05f,-4.62f,3.8f,0.62f,0.10f,0.035f,0.09f,0.15f);
+            draw(0,4.18f,-4.54f,3.15f,0.055f,0.035f,0.10f,0.78f,0.92f);
+            draw(-1.15f,4.0f,-4.53f,0.11f,0.28f,0.035f,0.20f,0.78f,0.96f);
+            draw(1.15f,4.0f,-4.53f,0.11f,0.28f,0.035f,0.20f,0.78f,0.96f);
+            // caixas de componentes coloridas no chão
+            draw(-4.7f,0.42f,2.8f,0.85f,0.72f,0.82f,0.10f,0.27f,0.39f);
+            draw(-4.7f,0.80f,2.8f,0.90f,0.055f,0.87f,0.20f,0.68f,0.90f);
+            draw(-3.65f,0.32f,2.9f,0.72f,0.52f,0.70f,0.32f,0.19f,0.12f);
+            draw(-3.65f,0.60f,2.9f,0.76f,0.045f,0.74f,0.92f,0.62f,0.20f);
+            // cadeira do técnico
+            draw(3.9f,0.78f,1.8f,0.95f,0.16f,0.85f,0.12f,0.16f,0.22f);
+            draw(3.9f,1.45f,2.15f,0.85f,0.85f,0.18f,0.13f,0.19f,0.27f);
+            draw(3.9f,0.38f,1.8f,0.12f,0.68f,0.12f,0.20f,0.24f,0.29f);
+            // luzes de status nos equipamentos
+            draw(-1.65f,2.72f,0.12f,0.09f,0.09f,0.045f,0.12f,0.95f,0.50f);
+            draw(-1.35f,2.72f,0.12f,0.09f,0.09f,0.045f,0.12f,0.55f,0.98f);
+            draw(2.05f,2.35f,-0.91f,0.95f,0.035f,0.018f,0.12f,0.82f,0.98f);
         }
         void draw(float x,float y,float z,float sx,float sy,float sz,float r,float g,float b){
             Matrix.setIdentityM(model,0);Matrix.translateM(model,0,x,y,z);Matrix.scaleM(model,0,sx,sy,sz);Matrix.multiplyMM(mvp,0,vp,0,model,0);
