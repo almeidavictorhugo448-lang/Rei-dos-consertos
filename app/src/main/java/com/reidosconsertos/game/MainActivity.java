@@ -1,10 +1,143 @@
 package com.reidosconsertos.game;
-import android.app.*; import android.os.*; import android.graphics.*; import android.view.*;
+
+import android.app.Activity;
+import android.os.Bundle;
+import android.opengl.GLSurfaceView;
+import android.opengl.GLES20;
+import android.opengl.Matrix;
+import android.view.Gravity;
+import android.view.View;
+import android.widget.Button;
+import android.widget.FrameLayout;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.graphics.Color;
+import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
+import java.nio.ShortBuffer;
+import java.util.ArrayList;
+import java.util.List;
+import javax.microedition.khronos.egl.EGLConfig;
+import javax.microedition.khronos.opengles.GL10;
+
 public class MainActivity extends Activity {
- public void onCreate(Bundle b){super.onCreate(b);getWindow().getDecorView().setSystemUiVisibility(5894|1024|512);setContentView(new Game());}
- class Game extends View { Paint p=new Paint(3); int money=2000,rep=50,day=1,job=0; String msg="Bem-vindo! Toque no cliente para atender.";
- Game(){super(MainActivity.this);} void box(Canvas c,int color,float l,float t,float r,float b){p.setColor(color);c.drawRoundRect(l,t,r,b,16,16,p);} void text(Canvas c,String s,float x,float y,int z,int color){p.setColor(color);p.setTextSize(z);p.setTypeface(Typeface.create("sans-serif",1));c.drawText(s,x,y,p);}
- protected void onDraw(Canvas c){float w=getWidth(),h=getHeight();c.drawColor(Color.rgb(25,35,45));box(c,Color.rgb(43,59,70),18,18,w-18,h-18);text(c,"REI DOS CONSERTOS",42,60,30,Color.WHITE);text(c,"Caixa: R$ "+money+"    Reputacao: "+rep+"/100    Dia "+day,42,98,19,Color.YELLOW);box(c,Color.rgb(75,91,96),40,120,w-40,h-25);text(c,"SUA ASSISTENCIA TECNICA",65,160,22,Color.WHITE);box(c,Color.rgb(110,78,53),80,195,w-80,h-100);box(c,Color.rgb(35,43,52),120,225,w-120,h-140);text(c,"BANCADA DE REPARO",145,260,18,Color.WHITE);box(c,Color.rgb(45,115,180),w*.10f,h*.52f,w*.42f,h*.77f);text(c,"CLIENTE",w*.17f,h*.61f,20,Color.WHITE);text(c,job==0?"Celular com tela quebrada":"Console superaquecendo",w*.12f,h*.68f,15,Color.WHITE);box(c,Color.rgb(25,140,90),w*.58f,h*.52f,w*.9f,h*.77f);text(c,"DIAGNOSTICAR",w*.64f,h*.61f,18,Color.WHITE);text(c,"E CONSERTAR",w*.65f,h*.68f,18,Color.WHITE);box(c,Color.rgb(190,125,30),w*.38f,h*.81f,w*.62f,h*.93f);text(c,"PROXIMO CLIENTE",w*.405f,h*.885f,15,Color.WHITE);text(c,msg,42,h-42,14,Color.WHITE);}
- public boolean onTouchEvent(MotionEvent e){if(e.getAction()==1){float x=e.getX(),y=e.getY(),w=getWidth(),h=getHeight();if(y>h*.5f&&x>w*.55f&&x<w*.92f){int gain=job==0?180:260;money+=gain;rep=Math.min(100,rep+5);msg="Conserto concluido! +R$ "+gain;job=1-job;}else if(y>h*.8f){day++;msg="Novo dia! Outros clientes chegaram.";}else msg="Cliente: voce consegue consertar meu aparelho?";invalidate();}return true;}
- }
+    GameRenderer renderer;
+    TextView status, task;
+    int money=2000, reputation=50, day=1, part=0, screen=0, job=0;
+    boolean gpuInstalled=false, ramInstalled=false, sideOpen=true;
+    String[] jobs={"PC gamer não liga","Celular com tela quebrada","Nintendo Switch não carrega","PlayStation superaquecendo","Xbox sem imagem"};
+    String[] parts={"Placa de vídeo","Memória RAM","Gabinete","Tela do celular","Bateria do Switch"};
+    int[] prices={650,180,320,240,190};
+
+    @Override public void onCreate(Bundle b){
+        super.onCreate(b);
+        getWindow().getDecorView().setSystemUiVisibility(5894|1024|512|4096);
+        FrameLayout root=new FrameLayout(this);
+        GLSurfaceView gl=new GLSurfaceView(this);
+        gl.setEGLContextClientVersion(2);
+        renderer=new GameRenderer();
+        gl.setRenderer(renderer);
+        gl.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
+        root.addView(gl);
+        LinearLayout hud=new LinearLayout(this);
+        hud.setOrientation(LinearLayout.VERTICAL);
+        hud.setPadding(22,14,22,14);
+        hud.setBackgroundColor(0xAA111A25);
+        status=label("REI DOS CONSERTOS     CAIXA: R$ 2.000     ★ 50     DIA 1",19,Color.WHITE);
+        hud.addView(status);
+        task=label("CLIENTE: "+jobs[0]+"  |  Toque nas peças da bancada para interagir.",14,0xFFFFD66B);
+        LinearLayout.LayoutParams tp=new LinearLayout.LayoutParams(-1,-2); tp.topMargin=8; hud.addView(task,tp);
+        FrameLayout.LayoutParams hp=new FrameLayout.LayoutParams(-1,-2,Gravity.TOP); root.addView(hud,hp);
+
+        LinearLayout controls=new LinearLayout(this);
+        controls.setGravity(Gravity.CENTER);
+        controls.setPadding(8,8,8,8);
+        controls.setBackgroundColor(0xCC111A25);
+        String[] names={"PEÇAS","INSTALAR / REMOVER","LOJA","ATENDER CLIENTE"};
+        for(int i=0;i<names.length;i++){
+            final int id=i;
+            Button bt=new Button(this); bt.setText(names[i]); bt.setTextSize(11); bt.setTextColor(Color.WHITE);
+            bt.setAllCaps(false); bt.setBackground(round(0xFF2469B4));
+            LinearLayout.LayoutParams bp=new LinearLayout.LayoutParams(0,58,1); bp.setMargins(4,0,4,0); controls.addView(bt,bp);
+            bt.setOnClickListener(v->action(id));
+        }
+        FrameLayout.LayoutParams cp=new FrameLayout.LayoutParams(-1,-2,Gravity.BOTTOM); root.addView(controls,cp);
+        setContentView(root);
+    }
+    TextView label(String s,int size,int color){TextView t=new TextView(this);t.setText(s);t.setTextSize(size);t.setTextColor(color);t.setTypeface(Typeface.DEFAULT,Typeface.BOLD);return t;}
+    GradientDrawable round(int color){GradientDrawable d=new GradientDrawable();d.setColor(color);d.setCornerRadius(18);return d;}
+    void update(){status.setText("REI DOS CONSERTOS     CAIXA: R$ "+money+"     ★ "+reputation+"     DIA "+day);}
+    void action(int a){
+        if(a==0){part=(part+1)%5;renderer.selected=part;task.setText("PEÇA SELECIONADA: "+parts[part]+"  |  Valor: R$ "+prices[part]);}
+        if(a==1){
+            if(money>=prices[part]){money-=prices[part]; if(part==0)gpuInstalled=!gpuInstalled; if(part==1)ramInstalled=!ramInstalled; renderer.gpu=gpuInstalled;renderer.ram=ramInstalled;task.setText(parts[part]+(part<2?(part==0?(gpuInstalled?" instalada!":" removida."): (ramInstalled?" instalada!":" removida.")):" pronta para reparo."));}
+            else task.setText("Dinheiro insuficiente! Visite a loja e atenda clientes.");
+        }
+        if(a==2){money+=0;task.setText("LOJA: "+parts[part]+" custa R$ "+prices[part]+". Use INSTALAR / REMOVER para comprar e aplicar.");}
+        if(a==3){int reward=220+job*35;money+=reward;reputation=Math.min(100,reputation+3);job=(job+1)%jobs.length;day++;task.setText("SERVIÇO concluído! Você recebeu R$ "+reward+". Próximo: "+jobs[job]);}
+        update();
+    }
+
+    static class GameRenderer implements GLSurfaceView.Renderer {
+        int program, pos, mvpLoc, colorLoc;
+        FloatBuffer vertices; ShortBuffer indices;
+        float[] projection=new float[16], view=new float[16], model=new float[16], vp=new float[16], mvp=new float[16];
+        boolean gpu=false,ram=false; int selected=0;
+        final float[] cube={-0.5f,-0.5f,-0.5f, 0.5f,-0.5f,-0.5f, 0.5f,0.5f,-0.5f,-0.5f,0.5f,-0.5f,
+          -0.5f,-0.5f,0.5f, 0.5f,-0.5f,0.5f, 0.5f,0.5f,0.5f,-0.5f,0.5f,0.5f};
+        final short[] ix={0,1,2,0,2,3,4,6,5,4,7,6,0,4,5,0,5,1,3,2,6,3,6,7,1,5,6,1,6,2,0,3,7,0,7,4};
+        @Override public void onSurfaceCreated(GL10 gl,EGLConfig cfg){
+            GLES20.glClearColor(0.10f,0.14f,0.19f,1); GLES20.glEnable(GLES20.GL_DEPTH_TEST);
+            String vs="uniform mat4 uMVP; attribute vec3 aPos; void main(){gl_Position=uMVP*vec4(aPos,1.0);}";
+            String fs="precision mediump float; uniform vec4 uColor; void main(){gl_FragColor=uColor;}";
+            int v=shader(GLES20.GL_VERTEX_SHADER,vs), f=shader(GLES20.GL_FRAGMENT_SHADER,fs);
+            program=GLES20.glCreateProgram();GLES20.glAttachShader(program,v);GLES20.glAttachShader(program,f);GLES20.glLinkProgram(program);
+            pos=GLES20.glGetAttribLocation(program,"aPos");mvpLoc=GLES20.glGetUniformLocation(program,"uMVP");colorLoc=GLES20.glGetUniformLocation(program,"uColor");
+            ByteBuffer bb=ByteBuffer.allocateDirect(cube.length*4).order(ByteOrder.nativeOrder());vertices=bb.asFloatBuffer();vertices.put(cube).position(0);
+            ByteBuffer ib=ByteBuffer.allocateDirect(ix.length*2).order(ByteOrder.nativeOrder());indices=ib.asShortBuffer();indices.put(ix).position(0);
+        }
+        int shader(int type,String src){int s=GLES20.glCreateShader(type);GLES20.glShaderSource(s,src);GLES20.glCompileShader(s);return s;}
+        @Override public void onSurfaceChanged(GL10 gl,int w,int h){GLES20.glViewport(0,0,w,h);Matrix.perspectiveM(projection,0,48,(float)w/Math.max(1,h),0.1f,100f);}
+        @Override public void onDrawFrame(GL10 gl){
+            GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT|GLES20.GL_DEPTH_BUFFER_BIT);GLES20.glUseProgram(program);
+            Matrix.setLookAtM(view,0,5.8f,5.2f,8.8f,0,1.1f,0,0,1,0);Matrix.multiplyMM(vp,0,projection,0,view,0);
+            draw(0,-0.18f,0,13,0.35f,10,0.34f,0.38f,0.44f);
+            draw(0,2.6f,-4.8f,13,5.2f,0.25f,0.7f,0.62f,0.48f);
+            draw(-6.3f,2.5f,0,0.25f,5,9,0.25f,0.31f,0.38f);
+            draw(6.3f,2.5f,0,0.25f,5,9,0.25f,0.31f,0.38f);
+            // bancada de madeira e estrutura
+            draw(0,1.15f,-0.3f,6.8f,0.22f,3.2f,0.48f,0.29f,0.16f);
+            for(int x=-2;x<=2;x+=4)for(int z=-1;z<=1;z+=2)draw(x,0.5f,-0.3f+z,0.18f,1.1f,0.18f,0.18f,0.20f,0.23f);
+            // gabinete aberto
+            draw(-1.15f,2.0f,-0.1f,1.75f,1.75f,1.15f,0.12f,0.15f,0.19f);
+            draw(-1.15f,2.0f,0.50f,1.42f,1.4f,0.05f,0.28f,0.32f,0.37f);
+            draw(-1.15f,2.0f,0.54f,0.95f,0.9f,0.08f,0.10f,0.45f,0.30f);
+            // componentes da placa
+            draw(-1.45f,2.05f,0.62f,0.36f,0.12f,0.36f,0.75f,0.75f,0.78f);
+            draw(-0.85f,2.05f,0.62f,0.22f,0.1f,0.32f,0.75f,0.75f,0.78f);
+            if(ram)draw(-0.55f,2.25f,0.58f,0.12f,0.65f,0.18f,0.1f,0.85f,0.45f);else draw(-0.55f,2.25f,0.58f,0.12f,0.65f,0.18f,0.85f,0.65f,0.12f);
+            if(gpu)draw(-1.2f,1.68f,0.6f,1.05f,0.22f,0.35f,0.18f,0.52f,0.92f);else draw(-1.2f,1.68f,0.6f,0.75f,0.18f,0.25f,0.75f,0.24f,0.18f);
+            // monitor e ferramentas
+            draw(2.05f,2.35f,-1.05f,1.8f,1.15f,0.12f,0.035f,0.055f,0.08f);
+            draw(2.05f,2.35f,-0.96f,1.58f,0.92f,0.04f,0.12f,0.48f,0.72f);
+            draw(2.05f,1.65f,-1.02f,0.18f,0.65f,0.18f,0.25f,0.27f,0.30f);
+            draw(2.0f,1.3f,0.0f,1.5f,0.08f,0.55f,0.08f,0.09f,0.11f);
+            draw(0.2f,1.34f,-1.25f,0.25f,0.42f,0.25f,0.95f,0.55f,0.08f);
+            // prateleira e caixas de peças
+            draw(-4.8f,3.1f,-3.7f,2.1f,0.12f,1.0f,0.40f,0.25f,0.14f);
+            draw(-5.0f,3.55f,-3.7f,0.55f,0.65f,0.65f,0.15f,0.42f,0.30f);
+            draw(-4.35f,3.55f,-3.7f,0.55f,0.65f,0.65f,0.18f,0.20f,0.24f);
+            // luzes e decoração
+            draw(0,4.8f,-2.2f,3.4f,0.08f,0.25f,0.95f,0.83f,0.55f);
+        }
+        void draw(float x,float y,float z,float sx,float sy,float sz,float r,float g,float b){
+            Matrix.setIdentityM(model,0);Matrix.translateM(model,0,x,y,z);Matrix.scaleM(model,0,sx,sy,sz);Matrix.multiplyMM(mvp,0,vp,0,model,0);
+            GLES20.glUniformMatrix4fv(mvpLoc,1,false,mvp,0);GLES20.glUniform4f(colorLoc,r,g,b,1);
+            GLES20.glEnableVertexAttribArray(pos);GLES20.glVertexAttribPointer(pos,3,GLES20.GL_FLOAT,false,0,vertices);
+            GLES20.glDrawElements(GLES20.GL_TRIANGLES,ix.length,GLES20.GL_UNSIGNED_SHORT,indices);GLES20.glDisableVertexAttribArray(pos);
+        }
+    }
 }
