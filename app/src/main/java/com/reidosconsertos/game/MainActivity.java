@@ -93,7 +93,9 @@ public class MainActivity extends Activity {
     void message(String text){task.setText(text);}
     void loadGame(){
         money=prefs.getInt("money",2000); reputation=prefs.getInt("rep",50); day=prefs.getInt("day",1);
-        job=prefs.getInt("job",0); completed=prefs.getInt("completed",0);
+        job=Math.max(0,Math.min(jobs.length-1,prefs.getInt("job",0)));
+        completed=Math.max(0,prefs.getInt("completed",0));
+        money=Math.max(0,money); reputation=Math.max(0,Math.min(100,reputation)); day=Math.max(1,day);
         for(int i=0;i<stock.length;i++) stock[i]=prefs.getInt("stock_"+i,0);
     }
     void saveGame(){
@@ -103,13 +105,15 @@ public class MainActivity extends Activity {
         e.apply();
     }
     void showDiagnosis(){
-        String[] options={parts[job],"Carregador / cabo","Limpeza externa"};
+        String[] options={"Cabo / carregador","Limpeza interna","Placa / componente principal"};
+        options[(int)(Math.random()*options.length)]=parts[job];
         new AlertDialog.Builder(this).setTitle("Diagnóstico: "+jobs[job])
           .setMessage("Leia o pedido do cliente e escolha a peça que provavelmente está com defeito.")
           .setItems(options,(d,which)->{
               if(options[which].equals(parts[job])){
                   diagnosed=true; removed=false; installed=false; tested=false; testStep=0;
-                  message("Diagnóstico correto! Agora abra PEÇAS e separe: "+parts[job]+".");
+                  part=job;renderer.selected=job;
+                  message("Diagnóstico correto! A peça necessária é "+parts[job]+". Confira o estoque em PEÇAS.");
               }else{
                   reputation=Math.max(0,reputation-2);
                   message("Diagnóstico incorreto. O cliente perdeu a confiança. Tente novamente.");
