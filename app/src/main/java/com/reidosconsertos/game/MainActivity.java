@@ -204,6 +204,31 @@ public class MainActivity extends Activity {
         card.setAlpha(0f);card.setTranslationY(dp(12));card.animate().alpha(1f).translationY(0).setDuration(220).start();
     }
     void showShop(){
+        LinearLayout desktop=new LinearLayout(this);
+        desktop.setOrientation(LinearLayout.VERTICAL);
+        desktop.setPadding(dp(14),dp(12),dp(14),dp(12));
+        GradientDrawable wallpaper=new GradientDrawable(GradientDrawable.Orientation.TL_BR,new int[]{0xFF102A43,0xFF174B68,0xFF101923});
+        wallpaper.setCornerRadius(dp(16)); desktop.setBackground(wallpaper);
+        LinearLayout bar=new LinearLayout(this);bar.setGravity(Gravity.CENTER_VERTICAL);bar.setPadding(dp(10),dp(8),dp(10),dp(8));bar.setBackground(round(0xFF172536));
+        TextView brand=label("▣  REI OS  ·  COMPUTADOR DA OFICINA",14,Color.WHITE);bar.addView(brand,new LinearLayout.LayoutParams(0,-2,1));
+        TextView clock=label("● ONLINE",10,0xFF77E0A0);bar.addView(clock);desktop.addView(bar);
+        TextView welcome=label("ÁREA DE TRABALHO",12,0xFFB8D4E9);welcome.setPadding(dp(4),dp(18),0,dp(10));desktop.addView(welcome);
+        LinearLayout appTile=new LinearLayout(this);appTile.setOrientation(LinearLayout.VERTICAL);appTile.setGravity(Gravity.CENTER);appTile.setPadding(dp(18),dp(16),dp(18),dp(16));appTile.setBackground(round(0xCC2469A0));
+        LinearLayout.LayoutParams tileParams=new LinearLayout.LayoutParams(dp(142),dp(132));tileParams.gravity=Gravity.LEFT;desktop.addView(appTile,tileParams);
+        TextView appIcon=label("🛒",34,Color.WHITE);appIcon.setGravity(Gravity.CENTER);appTile.addView(appIcon);
+        TextView appName=label("PEÇAS",16,Color.WHITE);appName.setGravity(Gravity.CENTER);appTile.addView(appName);
+        TextView appDesc=label("Loja de componentes",10,0xFFD5E8F6);appDesc.setGravity(Gravity.CENTER);appTile.addView(appDesc);
+        appTile.setOnClickListener(v->{appTile.animate().scaleX(0.94f).scaleY(0.94f).setDuration(90).withEndAction(()->{dialogDismissSafe(v);showPartsApp();}).start();});
+        TextView tip=label("Toque no aplicativo PEÇAS para abrir a loja.",12,0xFFB8D4E9);tip.setPadding(0,dp(18),0,0);desktop.addView(tip);
+        LinearLayout bottom=new LinearLayout(this);bottom.setGravity(Gravity.CENTER_VERTICAL);bottom.setPadding(dp(10),dp(9),dp(10),dp(9));bottom.setBackground(round(0xFF172536));
+        TextView moneyText=label("CARTEIRA  ·  R$ "+money,13,0xFFFFD166);bottom.addView(moneyText,new LinearLayout.LayoutParams(0,-2,1));
+        TextView closeText=label("FECHAR",11,Color.WHITE);bottom.addView(closeText);desktop.addView(new View(this),new LinearLayout.LayoutParams(1,0,1));desktop.addView(bottom);
+        AlertDialog dialog=new AlertDialog.Builder(this).setTitle("COMPUTADOR").setView(desktop).setNegativeButton("DESLIGAR",null).create();
+        appTile.setOnClickListener(v->{appTile.animate().alpha(0.75f).scaleX(0.94f).scaleY(0.94f).setDuration(90).withEndAction(()->{dialog.dismiss();showPartsApp();}).start();});
+        dialog.show();dialog.getWindow().setLayout((int)(getResources().getDisplayMetrics().widthPixels*0.94),(int)(getResources().getDisplayMetrics().heightPixels*0.82));
+        desktop.setAlpha(0f);desktop.setTranslationY(dp(18));desktop.animate().alpha(1f).translationY(0).setDuration(260).start();
+    }
+    void showPartsApp(){
         LinearLayout home=new LinearLayout(this);home.setOrientation(LinearLayout.VERTICAL);home.setPadding(dp(14),dp(12),dp(14),dp(12));home.setBackgroundColor(0xFF101923);
         LinearLayout top=new LinearLayout(this);top.setOrientation(LinearLayout.VERTICAL);top.setPadding(dp(12),dp(12),dp(12),dp(12));top.setBackground(round(0xFF1D3042));
         top.addView(label("▣  PEÇAS STORE",22,Color.WHITE));top.addView(label("Aplicativo da oficina · fornecedor de componentes",12,0xFF9DB9D5));
