@@ -156,8 +156,25 @@ public class MainActivity extends Activity {
         "https://instock.net/cdn/shop/files/NT9753_2.jpg?v=1771701742&width=800",
         "https://images-na.ssl-images-amazon.com/images/I/61JPQKrfaqL.jpg",
         "https://dmassets.micron.com/is/image/microntechnology/product-4600-right-white%3A3-2-all-others?dpr=off&ts=1740701906067",
-        "https://s.alicdn.com/%40sc04/kf/H0e528f597be448bfa588e230403705ff7/FURY-16GB-2x8GB-DDR4-3200-Ram.jpg"
-        // As demais peças usam fotos de referência da mesma família de componentes.\n    };
+        "https://s.alicdn.com/%40sc04/kf/H0e528f597be448bfa588e230403705ff7/FURY-16GB-2x8GB-DDR4-3200-Ram.jpg",
+        "https://images.pexels.com/photos/2582937/pexels-photo-2582937.jpeg",
+        "https://images.pexels.com/photos/159220/pcb-electronics-computer-pc-159220.jpeg",
+        "https://images.pexels.com/photos/3520694/pexels-photo-3520694.jpeg",
+        "https://images.pexels.com/photos/4792733/pexels-photo-4792733.jpeg",
+        "https://images.pexels.com/photos/159298/gears-cogs-machine-machinery-159298.jpeg",
+        "https://images.pexels.com/photos/163140/keyboard-computer-desktop-laptop-163140.jpeg",
+        "https://images.pexels.com/photos/607812/pexels-photo-607812.jpeg",
+        "https://images.pexels.com/photos/404280/pexels-photo-404280.jpeg",
+        "https://images.pexels.com/photos/437037/pexels-photo-437037.jpeg",
+        "https://images.pexels.com/photos/1034650/pexels-photo-1034650.jpeg",
+        "https://images.pexels.com/photos/4792728/pexels-photo-4792728.jpeg",
+        "https://images.pexels.com/photos/159393/gamepad-video-game-controller-game-controller-159393.jpeg",
+        "https://images.pexels.com/photos/3945683/pexels-photo-3945683.jpeg",
+        "https://images.pexels.com/photos/7915437/pexels-photo-7915437.jpeg",
+        "https://images.pexels.com/photos/442576/pexels-photo-442576.jpeg",
+        "https://images.pexels.com/photos/1298601/pexels-photo-1298601.jpeg",
+        "https://images.pexels.com/photos/4792075/pexels-photo-4792075.jpeg"
+    };
     int dp(float n){return (int)(n*getResources().getDisplayMetrics().density+0.5f);}
     void loadPartPhoto(ImageView target,String url){
         target.setBackground(round(0xFF263445));
