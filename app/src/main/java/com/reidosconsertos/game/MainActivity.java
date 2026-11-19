@@ -43,7 +43,7 @@ public class MainActivity extends Activity {
     final String[] parts={"Placa de vídeo","Tela OLED","Bateria Switch","Pasta térmica","Porta HDMI","Analógico Joy-Con","SSD NVMe","Memória RAM"};
     final int[] prices={650,240,190,45,160,75,220,180};
     final int[] rewards={520,360,410,390,430,260,340,470};
-    int[] stock={0,0,0,0,0,0,0,0};
+    int[] stock=new int[26];
     int testStep=0;
     SharedPreferences prefs;
 
