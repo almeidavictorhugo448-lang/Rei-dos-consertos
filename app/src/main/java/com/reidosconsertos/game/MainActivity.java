@@ -51,27 +51,25 @@ public class MainActivity extends Activity {
         prefs=getSharedPreferences("rei_dos_consertos_save",MODE_PRIVATE);
         loadGame();
         FrameLayout root=new FrameLayout(this);
-        // Cenário fotográfico de uma assistência/loja real, no lugar da sala feita de cubos.
-        ImageView storefront=new ImageView(this);
-        storefront.setScaleType(ImageView.ScaleType.CENTER_CROP);
-        storefront.setBackgroundColor(0xFF17212B);
-        root.addView(storefront,new FrameLayout.LayoutParams(-1,-1));
-        loadStorefront(storefront);
-        View shade=new View(this);
-        shade.setBackgroundColor(0x33071119);
-        root.addView(shade,new FrameLayout.LayoutParams(-1,-1));
+        root.setBackgroundColor(0xFF101923);
         GLSurfaceView gl=new GLSurfaceView(this);
         glView=gl;
         gl.setEGLContextClientVersion(2);
         renderer=new GameRenderer();
         gl.setRenderer(renderer);
         gl.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
-        final float[] lastTouchX={0f};
+        root.addView(gl,new FrameLayout.LayoutParams(-1,-1));
+        final float[] lastTouch={0f,0f};
         gl.setOnTouchListener((view,event)->{
-            if(event.getAction()==android.view.MotionEvent.ACTION_DOWN){lastTouchX[0]=event.getX();return true;}
+            if(event.getAction()==android.view.MotionEvent.ACTION_DOWN){
+                lastTouch[0]=event.getX();lastTouch[1]=event.getY();return true;
+            }
             if(event.getAction()==android.view.MotionEvent.ACTION_MOVE){
-                float dx=event.getX()-lastTouchX[0];lastTouchX[0]=event.getX();
-                renderer.rotateCamera(dx*0.008f);return true;
+                float dx=event.getX()-lastTouch[0], dy=event.getY()-lastTouch[1];
+                lastTouch[0]=event.getX();lastTouch[1]=event.getY();
+                if(event.getX()<view.getWidth()*0.48f) renderer.movePlayer(dx*0.018f,dy*0.018f);
+                else renderer.rotateCamera(dx*0.008f);
+                return true;
             }
             return true;
         });
@@ -332,7 +330,12 @@ public class MainActivity extends Activity {
         float[] projection=new float[16], view=new float[16], model=new float[16], vp=new float[16], mvp=new float[16];
         boolean gpu=false,ram=false; int selected=0;
         volatile float cameraYaw=0.58f;
+        volatile float playerX=4.45f, playerZ=2.55f;
         void rotateCamera(float delta){cameraYaw+=delta;}
+        void movePlayer(float dx,float dz){
+            playerX=Math.max(-4.7f,Math.min(4.7f,playerX+dx));
+            playerZ=Math.max(-3.2f,Math.min(3.8f,playerZ+dz));
+        }
         final float[] cube={-0.5f,-0.5f,-0.5f, 0.5f,-0.5f,-0.5f, 0.5f,0.5f,-0.5f,-0.5f,0.5f,-0.5f,
           -0.5f,-0.5f,0.5f, 0.5f,-0.5f,0.5f, 0.5f,0.5f,0.5f,-0.5f,0.5f,0.5f};
         final short[] ix={0,1,2,0,2,3,4,6,5,4,7,6,0,4,5,0,5,1,3,2,6,3,6,7,1,5,6,1,6,2,0,3,7,0,7,4};
@@ -353,7 +356,7 @@ public class MainActivity extends Activity {
             float distance=10.5f;
             float cameraX=(float)Math.sin(cameraYaw)*distance;
             float cameraZ=(float)Math.cos(cameraYaw)*distance;
-            Matrix.setLookAtM(view,0,cameraX,5.2f,cameraZ,0,1.1f,0,0,1,0);Matrix.multiplyMM(vp,0,projection,0,view,0);
+            Matrix.setLookAtM(view,0,cameraX+playerX,5.2f,cameraZ+playerZ,playerX,1.1f,playerZ,0,1,0);Matrix.multiplyMM(vp,0,projection,0,view,0);
             draw(0,-0.18f,0,13,0.35f,10,0.34f,0.38f,0.44f);
             draw(0,2.6f,-4.8f,13,5.2f,0.25f,0.7f,0.62f,0.48f);
             draw(-6.3f,2.5f,0,0.25f,5,9,0.25f,0.31f,0.38f);
@@ -391,6 +394,14 @@ public class MainActivity extends Activity {
             draw(4.55f,1.28f,-2.0f,0.52f,0.68f,0.30f,0.16f,0.42f,0.72f);
             draw(4.55f,1.93f,-2.0f,0.31f,0.32f,0.31f,0.72f,0.50f,0.34f);
             draw(4.55f,2.10f,-2.0f,0.33f,0.12f,0.33f,0.10f,0.075f,0.055f);
+            // Personagem do jogador: corpo, cabeça, braços e pernas em estilo low-poly.
+            draw(playerX,0.48f,playerZ,0.34f,0.72f,0.25f,0.12f,0.19f,0.31f);
+            draw(playerX,1.30f,playerZ,0.43f,0.62f,0.30f,0.08f,0.38f,0.82f);
+            draw(playerX,1.94f,playerZ,0.34f,0.34f,0.34f,0.72f,0.51f,0.36f);
+            draw(playerX-0.29f,1.30f,playerZ,0.16f,0.58f,0.18f,0.72f,0.51f,0.36f);
+            draw(playerX+0.29f,1.30f,playerZ,0.16f,0.58f,0.18f,0.72f,0.51f,0.36f);
+            draw(playerX-0.12f,0.12f,playerZ,0.15f,0.42f,0.19f,0.10f,0.12f,0.17f);
+            draw(playerX+0.12f,0.12f,playerZ,0.15f,0.42f,0.19f,0.10f,0.12f,0.17f);
             // caixas e aparelhos expostos na prateleira
             draw(-5.65f,3.55f,-3.7f,0.42f,0.65f,0.62f,0.12f,0.16f,0.22f);
             draw(-5.65f,3.58f,-3.35f,0.28f,0.48f,0.04f,0.10f,0.50f,0.82f);
