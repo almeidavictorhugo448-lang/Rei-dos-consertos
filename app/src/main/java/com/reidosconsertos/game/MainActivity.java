@@ -51,8 +51,18 @@ public class MainActivity extends Activity {
         prefs=getSharedPreferences("rei_dos_consertos_save",MODE_PRIVATE);
         loadGame();
         FrameLayout root=new FrameLayout(this);
+        // Cenário fotográfico de uma assistência/loja real, no lugar da sala feita de cubos.
+        ImageView storefront=new ImageView(this);
+        storefront.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        storefront.setBackgroundColor(0xFF17212B);
+        root.addView(storefront,new FrameLayout.LayoutParams(-1,-1));
+        loadStorefront(storefront);
+        View shade=new View(this);
+        shade.setBackgroundColor(0x33071119);
+        root.addView(shade,new FrameLayout.LayoutParams(-1,-1));
         GLSurfaceView gl=new GLSurfaceView(this);
         glView=gl;
+        gl.setAlpha(0f);
         gl.setEGLContextClientVersion(2);
         renderer=new GameRenderer();
         gl.setRenderer(renderer);
@@ -69,8 +79,8 @@ public class MainActivity extends Activity {
         root.addView(gl);
         LinearLayout hud=new LinearLayout(this);
         hud.setOrientation(LinearLayout.VERTICAL);
-        hud.setPadding(22,14,22,14);
-        hud.setBackgroundColor(0xAA111A25);
+        hud.setPadding(24,16,24,16);
+        hud.setBackground(round(0xC90B1420));
         status=label("REI DOS CONSERTOS     CAIXA: R$ "+money+"     ★ "+reputation+"     DIA "+day,17,Color.WHITE);
         hud.addView(status);
         task=label("PEDIDO: "+jobs[job]+"  |  Arraste para girar a oficina e comece pelo diagnóstico.",14,0xFFFFD66B);
@@ -79,18 +89,32 @@ public class MainActivity extends Activity {
 
         LinearLayout controls=new LinearLayout(this);
         controls.setGravity(Gravity.CENTER);
-        controls.setPadding(8,8,8,8);
-        controls.setBackgroundColor(0xCC111A25);
+        controls.setPadding(12,10,12,10);
+        controls.setBackground(round(0xE60A1420));
         String[] names={"DIAGNÓSTICO","PEÇAS","INSTALAR","TESTAR","ENTREGAR","LOJA"};
         for(int i=0;i<names.length;i++){
             final int id=i;
             Button bt=new Button(this); bt.setText(names[i]); bt.setTextSize(11); bt.setTextColor(Color.WHITE);
-            bt.setAllCaps(false); bt.setBackground(round(0xFF2469B4));
+            bt.setAllCaps(false); bt.setBackground(round(i==0?0xFF16A085:0xFF24445F));
             LinearLayout.LayoutParams bp=new LinearLayout.LayoutParams(0,58,1); bp.setMargins(4,0,4,0); controls.addView(bt,bp);
             bt.setOnClickListener(v->action(id));
         }
         FrameLayout.LayoutParams cp=new FrameLayout.LayoutParams(-1,-2,Gravity.BOTTOM); root.addView(controls,cp);
         setContentView(root);
+    }
+    void loadStorefront(ImageView target){
+        final String photo="https://www.mediaself.com/wp-content/uploads/2020/10/Mediaself_2020-20-1024x683.jpg";
+        Thread loader=new Thread(()->{
+            HttpURLConnection connection=null;
+            try{
+                connection=(HttpURLConnection)new URL(photo).openConnection();
+                connection.setConnectTimeout(9000);connection.setReadTimeout(12000);connection.setInstanceFollowRedirects(true);
+                connection.connect();
+                Bitmap bitmap=BitmapFactory.decodeStream(connection.getInputStream());
+                if(bitmap!=null)new Handler(Looper.getMainLooper()).post(()->target.setImageBitmap(bitmap));
+            }catch(Exception ignored){}finally{if(connection!=null)connection.disconnect();}
+        });
+        loader.setDaemon(true);loader.start();
     }
     TextView label(String s,int size,int color){TextView t=new TextView(this);t.setText(s);t.setTextSize(size);t.setTextColor(color);t.setTypeface(Typeface.DEFAULT,Typeface.BOLD);return t;}
     GradientDrawable round(int color){GradientDrawable d=new GradientDrawable();d.setColor(color);d.setCornerRadius(18);return d;}
