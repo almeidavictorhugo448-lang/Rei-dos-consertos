@@ -38,7 +38,7 @@ public class MainActivity extends Activity {
     GLSurfaceView glView;
     TextView status, task;
     int money=2000, reputation=50, day=1, part=0, job=0, completed=0;
-    boolean gpuInstalled=false, ramInstalled=false, diagnosed=false, removed=false, installed=false, tested=false;
+    boolean gpuInstalled=false, ramInstalled=false, diagnosed=false, removed=false, installed=false, tested=false, activeJob=false;
     final String[] jobs={"PC gamer não liga","Celular com tela quebrada","Nintendo Switch não carrega","PlayStation superaquecendo","Xbox sem imagem","Joy-Con com drift","Notebook lento","PC gamer sem vídeo"};
     final int[] rewards={520,360,410,390,430,260,340,470};
     int[] stock=new int[26];
@@ -80,7 +80,7 @@ public class MainActivity extends Activity {
         hud.setBackground(round(0xC90B1420));
         status=label("REI DOS CONSERTOS     CAIXA: R$ "+money+"     ★ "+reputation+"     DIA "+day,17,Color.WHITE);
         hud.addView(status);
-        task=label("PEDIDO: "+jobs[job]+"  |  Arraste no lado esquerdo para andar e no direito para girar a câmera.",14,0xFFFFD66B);
+        task=label("OFICINA ABERTA · Toque em CHAMAR CLIENTE para receber o primeiro aparelho. Arraste à esquerda para andar e à direita para girar.",14,0xFFFFD66B);
         LinearLayout.LayoutParams tp=new LinearLayout.LayoutParams(-1,-2); tp.topMargin=8; hud.addView(task,tp);
         FrameLayout.LayoutParams hp=new FrameLayout.LayoutParams(-1,-2,Gravity.TOP); root.addView(hud,hp);
 
@@ -88,7 +88,7 @@ public class MainActivity extends Activity {
         controls.setGravity(Gravity.CENTER);
         controls.setPadding(12,10,12,10);
         controls.setBackground(round(0xE60A1420));
-        String[] names={"DIAGNÓSTICO","PEÇAS","INSTALAR","TESTAR","ENTREGAR","LOJA"};
+        String[] names={"CHAMAR CLIENTE","PEÇAS","INSTALAR","TESTAR","ENTREGAR","COMPRAR"};
         for(int i=0;i<names.length;i++){
             final int id=i;
             Button bt=new Button(this); bt.setText(names[i]); bt.setTextSize(11); bt.setTextColor(Color.WHITE);
@@ -131,7 +131,7 @@ public class MainActivity extends Activity {
     void message(String text){task.setText(text);}
     void loadGame(){
         money=prefs.getInt("money",2000); reputation=prefs.getInt("rep",50); day=prefs.getInt("day",1);
-        job=Math.max(0,Math.min(jobs.length-1,prefs.getInt("job",0)));
+        job=Math.max(0,Math.min(jobs.length-1,prefs.getInt("job",0))); activeJob=false; diagnosed=false; removed=false; installed=false; tested=false;
         part=job;
         completed=Math.max(0,prefs.getInt("completed",0));
         money=Math.max(0,money); reputation=Math.max(0,Math.min(100,reputation)); day=Math.max(1,day);
@@ -144,6 +144,7 @@ public class MainActivity extends Activity {
         e.apply();
     }
     void showDiagnosis(){
+        if(!activeJob){message("Chame um cliente antes de iniciar o diagnóstico.");return;}
         if(job<0||job>=parts.length){message("Não foi possível carregar o serviço. Tente novamente.");return;}
         final String correct=parts[job];
         String[] options={correct,parts[(job+7)%parts.length],parts[(job+13)%parts.length]};
@@ -306,7 +307,8 @@ public class MainActivity extends Activity {
     }
     void showParts(){showPartsCatalog();}
     void action(int a){
-        if(a==0){showDiagnosis();return;}
+        if(a==0){if(!activeJob)startCustomer();else showDiagnosis();return;}
+        if(!activeJob){message("A oficina está livre. Toque em CHAMAR CLIENTE para receber um aparelho.");return;}
         if(a==1){showParts();return;}
         if(a==2){
             if(!diagnosed){message("Faça o diagnóstico antes de instalar qualquer peça.");return;}
@@ -326,11 +328,20 @@ public class MainActivity extends Activity {
         if(a==4){
             if(!tested){message("Ainda falta testar o aparelho. Não entregue um conserto sem teste.");return;}
             int reward=rewards[job];money+=reward;reputation=Math.min(100,reputation+4);completed++;
-            message("Conserto aprovado! +R$ "+reward+" · reputação +4. Próximo cliente: "+jobs[(job+1)%jobs.length]);
-            job=(job+1)%jobs.length;diagnosed=false;removed=false;installed=false;tested=false;testStep=0;day++;
+            message("Conserto aprovado! +R$ "+reward+" · reputação +4. O cliente foi embora. Chame o próximo quando estiver pronto.");
+            job=(job+1)%jobs.length;activeJob=false;renderer.customerActive=false;renderer.jobType=job;diagnosed=false;removed=false;installed=false;tested=false;testStep=0;day++;
             update();return;
         }
         if(a==5){showShop();}
+    }
+
+    void startCustomer(){
+        if(activeJob)return;
+        activeJob=true;diagnosed=false;removed=false;installed=false;tested=false;testStep=0;part=job;
+        renderer.customerActive=true;renderer.jobType=job;
+        String problem=jobs[job];
+        message("CLIENTE CHEGANDO · "+problem);
+        new AlertDialog.Builder(this).setTitle("🔔 NOVO CLIENTE").setMessage("Um cliente acabou de entrar na oficina.\n\nCliente: Olá! Meu aparelho está com problema: "+problem+".\n\nVocê pode dar uma olhada e descobrir o que está acontecendo?").setPositiveButton("RECEBER APARELHO",(d,w)->{message("SERVIÇO ABERTO · "+problem+" · Faça o diagnóstico para começar.");}).setCancelable(false).show();
     }
 
     static class GameRenderer implements GLSurfaceView.Renderer {
@@ -341,14 +352,29 @@ public class MainActivity extends Activity {
         volatile float cameraYaw=0.58f;
         volatile float playerX=4.45f, playerZ=2.55f;
         volatile long lastMoveNanos=0L;
+        volatile boolean customerActive=false;
+        volatile int jobType=0;
         void rotateCamera(float delta){cameraYaw+=delta;}
-        void movePlayer(float dx,float dz){
+        void movePlayer(float screenX,float screenY){
+            float c=(float)Math.cos(cameraYaw), sn=(float)Math.sin(cameraYaw);
+            float dx=screenX*c+screenY*sn;
+            float dz=-screenX*sn+screenY*c;
             float distance=(float)Math.sqrt(dx*dx+dz*dz);
-            if(distance>0.001f){
-                playerX=Math.max(-4.7f,Math.min(4.7f,playerX+dx));
-                playerZ=Math.max(-3.2f,Math.min(3.8f,playerZ+dz));
-                lastMoveNanos=System.nanoTime();
-            }
+            if(distance<0.0005f)return;
+            float scale=Math.min(1f,0.085f/distance);
+            dx*=scale;dz*=scale;
+            float nx=Math.max(-5.45f,Math.min(5.45f,playerX+dx));
+            float nz=Math.max(-3.95f,Math.min(4.05f,playerZ+dz));
+            if(!collides(nx,playerZ)){playerX=nx;}
+            if(!collides(playerX,nz)){playerZ=nz;}
+            lastMoveNanos=System.nanoTime();
+        }
+        boolean collides(float x,float z){
+            // AABB da bancada, armários e prateleira; círculo do cliente quando ativo.
+            if(x>-3.55f&&x<3.55f&&z>-1.95f&&z<1.48f)return true;
+            if(x<-3.65f&&x>-5.95f&&z<-3.05f&&z>-4.25f)return true;
+            if(customerActive){float cx=x-4.55f,cz=z+2.0f;if(cx*cx+cz*cz<0.72f)return true;}
+            return false;
         }
         final float[] cube={-0.5f,-0.5f,-0.5f, 0.5f,-0.5f,-0.5f, 0.5f,0.5f,-0.5f,-0.5f,0.5f,-0.5f,
           -0.5f,-0.5f,0.5f, 0.5f,-0.5f,0.5f, 0.5f,0.5f,0.5f,-0.5f,0.5f,0.5f};
@@ -378,7 +404,8 @@ public class MainActivity extends Activity {
             // bancada de madeira e estrutura
             draw(0,1.15f,-0.3f,6.8f,0.22f,3.2f,0.48f,0.29f,0.16f);
             for(int x=-2;x<=2;x+=4)for(int z=-1;z<=1;z+=2)draw(x,0.5f,-0.3f+z,0.18f,1.1f,0.18f,0.18f,0.20f,0.23f);
-            // gabinete aberto
+            // O computador só aparece na bancada quando um cliente traz um serviço de PC.
+            if(customerActive&&(jobType==0||jobType==7)){
             draw(-1.15f,2.0f,-0.1f,1.75f,1.75f,1.15f,0.12f,0.15f,0.19f);
             draw(-1.15f,2.0f,0.50f,1.42f,1.4f,0.05f,0.28f,0.32f,0.37f);
             draw(-1.15f,2.0f,0.54f,0.95f,0.9f,0.08f,0.10f,0.45f,0.30f);
@@ -394,6 +421,7 @@ public class MainActivity extends Activity {
             draw(-0.85f,2.05f,0.62f,0.22f,0.1f,0.32f,0.75f,0.75f,0.78f);
             if(ram)draw(-0.55f,2.25f,0.58f,0.12f,0.65f,0.18f,0.1f,0.85f,0.45f);else draw(-0.55f,2.25f,0.58f,0.12f,0.65f,0.18f,0.85f,0.65f,0.12f);
             if(gpu)draw(-1.2f,1.68f,0.6f,1.05f,0.22f,0.35f,0.18f,0.52f,0.92f);else draw(-1.2f,1.68f,0.6f,0.75f,0.18f,0.25f,0.75f,0.24f,0.18f);
+            }
             // monitor e ferramentas
             draw(2.05f,2.35f,-1.05f,1.8f,1.15f,0.12f,0.035f,0.055f,0.08f);
             draw(2.05f,2.35f,-0.96f,1.58f,0.92f,0.04f,0.12f,0.48f,0.72f);
@@ -410,8 +438,9 @@ public class MainActivity extends Activity {
             draw(2.85f,1.34f,0.12f,0.78f,0.10f,0.38f,0.09f,0.10f,0.12f);
             draw(2.58f,1.39f,0.12f,0.22f,0.08f,0.18f,0.16f,0.68f,0.42f);
             draw(3.12f,1.39f,0.12f,0.22f,0.08f,0.18f,0.16f,0.68f,0.42f);
-            // Cliente: respiração, leve balanço dos braços e movimento natural da cabeça.
+            // Cliente só entra na oficina quando o jogador aceita um novo atendimento.
             long now=System.nanoTime();
+            if(customerActive){
             float idle=(float)Math.sin(now/420000000.0)*0.035f;
             float customerSway=(float)Math.sin(now/850000000.0)*4.0f;
             draw(4.55f,0.58f,-2.0f,0.20f,0.62f,0.22f,0.12f,0.14f,0.19f);
@@ -420,10 +449,11 @@ public class MainActivity extends Activity {
             draw(4.55f,2.10f+idle,-2.0f,0.33f,0.12f,0.33f,0.10f,0.075f,0.055f);
             drawRotated(4.22f,1.30f,-2.0f,0.15f,0.55f,0.18f,customerSway,0.72f,0.50f,0.34f);
             drawRotated(4.88f,1.30f,-2.0f,0.15f,0.55f,0.18f,-customerSway,0.72f,0.50f,0.34f);
+            }
             // Jogador com ciclo de caminhada: braços e pernas alternam a passada.
-            boolean walking=now-lastMoveNanos<190000000L;
-            float stride=walking?(float)Math.sin(now/105000000.0)*27f:(float)Math.sin(now/900000000.0)*2f;
-            float bounce=walking?(float)Math.abs(Math.sin(now/105000000.0))*0.055f:0f;
+            boolean walking=now-lastMoveNanos<260000000L;
+            float stride=walking?(float)Math.sin(now/85000000.0)*34f:(float)Math.sin(now/1200000000.0)*1.2f;
+            float bounce=walking?(float)Math.abs(Math.sin(now/85000000.0))*0.075f:0f;
             draw(playerX,0.48f+bounce,playerZ,0.34f,0.72f,0.25f,0.12f,0.19f,0.31f);
             draw(playerX,1.30f+bounce,playerZ,0.43f,0.62f,0.30f,0.08f,0.38f,0.82f);
             draw(playerX,1.94f+bounce,playerZ,0.34f,0.34f,0.34f,0.72f,0.51f,0.36f);
@@ -489,7 +519,7 @@ public class MainActivity extends Activity {
         void drawRotated(float x,float y,float z,float sx,float sy,float sz,float angle,float r,float g,float b){
             Matrix.setIdentityM(model,0);
             Matrix.translateM(model,0,x,y,z);
-            Matrix.rotateM(model,0,angle,0f,0f,1f);
+            Matrix.rotateM(model,0,angle,1f,0f,0f);
             Matrix.scaleM(model,0,sx,sy,sz);
             Matrix.multiplyMM(mvp,0,vp,0,model,0);
             GLES20.glUniformMatrix4fv(mvpLoc,1,false,mvp,0);
