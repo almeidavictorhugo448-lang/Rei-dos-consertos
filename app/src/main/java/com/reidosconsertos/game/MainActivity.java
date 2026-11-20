@@ -308,8 +308,9 @@ public class MainActivity extends Activity {
     void showParts(){showPartsCatalog();}
     void action(int a){
         if(a==0){if(!activeJob)startCustomer();else showDiagnosis();return;}
-        if(!activeJob){message("A oficina está livre. Toque em CHAMAR CLIENTE para receber um aparelho.");return;}
         if(a==1){showParts();return;}
+        if(a==5){showShop();return;}
+        if(!activeJob){message("A oficina está livre. Toque em CHAMAR CLIENTE para receber um aparelho.");return;}
         if(a==2){
             if(!diagnosed){message("Faça o diagnóstico antes de instalar qualquer peça.");return;}
             if(part!=job){message("A peça selecionada não corresponde ao defeito. Selecione "+parts[job]+".");return;}
@@ -332,7 +333,6 @@ public class MainActivity extends Activity {
             job=(job+1)%jobs.length;activeJob=false;renderer.customerActive=false;renderer.jobType=job;diagnosed=false;removed=false;installed=false;tested=false;testStep=0;day++;
             update();return;
         }
-        if(a==5){showShop();}
     }
 
     void startCustomer(){
