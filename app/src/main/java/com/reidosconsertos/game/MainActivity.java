@@ -144,21 +144,30 @@ public class MainActivity extends Activity {
         e.apply();
     }
     void showDiagnosis(){
-        String[] options={"Cabo / carregador","Limpeza interna","Placa / componente principal"};
-        options[(int)(Math.random()*options.length)]=parts[job];
-        new AlertDialog.Builder(this).setTitle("Diagnóstico: "+jobs[job])
-          .setMessage("Leia o pedido do cliente e escolha a peça que provavelmente está com defeito.")
+        if(job<0||job>=parts.length){message("Não foi possível carregar o serviço. Tente novamente.");return;}
+        final String correct=parts[job];
+        String[] options={correct,parts[(job+7)%parts.length],parts[(job+13)%parts.length]};
+        // Embaralha as três respostas sem correr o risco de remover a peça correta.
+        for(int i=options.length-1;i>0;i--){
+            int j=(int)(Math.random()*(i+1));String temp=options[i];options[i]=options[j];options[j]=temp;
+        }
+        AlertDialog dialog=new AlertDialog.Builder(this)
+          .setTitle("🔧 DIAGNÓSTICO TÉCNICO")
+          .setMessage("Cliente: "+jobs[job]+"\n\nAnalise o defeito e selecione a peça que precisa ser reparada ou substituída.")
           .setItems(options,(d,which)->{
-              if(options[which].equals(parts[job])){
-                  diagnosed=true; removed=false; installed=false; tested=false; testStep=0;
+              if(options[which].equals(correct)){
+                  diagnosed=true;removed=false;installed=false;tested=false;testStep=0;
                   part=job;renderer.selected=job;
-                  message("Diagnóstico correto! A peça necessária é "+parts[job]+". Confira o estoque em PEÇAS.");
+                  message("✓ Diagnóstico correto! Peça necessária: "+correct+". Confira o estoque em PEÇAS.");
               }else{
+                  diagnosed=false;
                   reputation=Math.max(0,reputation-2);
-                  message("Diagnóstico incorreto. O cliente perdeu a confiança. Tente novamente.");
+                  message("Diagnóstico incorreto. -2 de reputação. Tente novamente.");
                   update();
               }
-          }).show();
+          }).create();
+        dialog.setCancelable(true);
+        dialog.show();
     }
     final String[] parts={"Placa de vídeo","Tela OLED","Bateria Switch","Pasta térmica","Conector HDMI","Analógico Joy-Con","SSD NVMe","Memória RAM",
         "Processador","Placa-mãe","Fonte ATX","Cooler de CPU","Gabinete","Memória RAM DDR5","Tela LCD de celular","Bateria de celular","Câmera traseira","Câmera frontal","Conector de carga USB-C","Alto-falante de celular","Controle sem fio","Bateria de controle","Botões e gatilhos","Leitor de discos","Ventoinha de console","Pasta térmica para console"};
@@ -331,10 +340,15 @@ public class MainActivity extends Activity {
         boolean gpu=false,ram=false; int selected=0;
         volatile float cameraYaw=0.58f;
         volatile float playerX=4.45f, playerZ=2.55f;
+        volatile long lastMoveNanos=0L;
         void rotateCamera(float delta){cameraYaw+=delta;}
         void movePlayer(float dx,float dz){
-            playerX=Math.max(-4.7f,Math.min(4.7f,playerX+dx));
-            playerZ=Math.max(-3.2f,Math.min(3.8f,playerZ+dz));
+            float distance=(float)Math.sqrt(dx*dx+dz*dz);
+            if(distance>0.001f){
+                playerX=Math.max(-4.7f,Math.min(4.7f,playerX+dx));
+                playerZ=Math.max(-3.2f,Math.min(3.8f,playerZ+dz));
+                lastMoveNanos=System.nanoTime();
+            }
         }
         final float[] cube={-0.5f,-0.5f,-0.5f, 0.5f,-0.5f,-0.5f, 0.5f,0.5f,-0.5f,-0.5f,0.5f,-0.5f,
           -0.5f,-0.5f,0.5f, 0.5f,-0.5f,0.5f, 0.5f,0.5f,0.5f,-0.5f,0.5f,0.5f};
@@ -342,7 +356,7 @@ public class MainActivity extends Activity {
         @Override public void onSurfaceCreated(GL10 gl,EGLConfig cfg){
             GLES20.glClearColor(0.10f,0.14f,0.19f,1); GLES20.glEnable(GLES20.GL_DEPTH_TEST);
             String vs="uniform mat4 uMVP; attribute vec3 aPos; void main(){gl_Position=uMVP*vec4(aPos,1.0);}";
-            String fs="precision mediump float; uniform vec4 uColor; void main(){gl_FragColor=uColor;}";
+            String fs="precision mediump float; uniform vec4 uColor; void main(){float faceLight=gl_FrontFacing?1.0:0.76; gl_FragColor=vec4(uColor.rgb*faceLight,uColor.a);}";
             int v=shader(GLES20.GL_VERTEX_SHADER,vs), f=shader(GLES20.GL_FRAGMENT_SHADER,fs);
             program=GLES20.glCreateProgram();GLES20.glAttachShader(program,v);GLES20.glAttachShader(program,f);GLES20.glLinkProgram(program);
             pos=GLES20.glGetAttribLocation(program,"aPos");mvpLoc=GLES20.glGetUniformLocation(program,"uMVP");colorLoc=GLES20.glGetUniformLocation(program,"uColor");
@@ -396,20 +410,27 @@ public class MainActivity extends Activity {
             draw(2.85f,1.34f,0.12f,0.78f,0.10f,0.38f,0.09f,0.10f,0.12f);
             draw(2.58f,1.39f,0.12f,0.22f,0.08f,0.18f,0.16f,0.68f,0.42f);
             draw(3.12f,1.39f,0.12f,0.22f,0.08f,0.18f,0.16f,0.68f,0.42f);
-            // Cliente com animação suave de respiração/espera.
-            float idle=(float)Math.sin(System.nanoTime()/420000000.0)*0.035f;
+            // Cliente: respiração, leve balanço dos braços e movimento natural da cabeça.
+            long now=System.nanoTime();
+            float idle=(float)Math.sin(now/420000000.0)*0.035f;
+            float customerSway=(float)Math.sin(now/850000000.0)*4.0f;
             draw(4.55f,0.58f,-2.0f,0.20f,0.62f,0.22f,0.12f,0.14f,0.19f);
             draw(4.55f,1.28f+idle,-2.0f,0.52f,0.68f,0.30f,0.16f,0.42f,0.72f);
-            draw(4.55f,1.93f,-2.0f,0.31f,0.32f,0.31f,0.72f,0.50f,0.34f);
-            draw(4.55f,2.10f,-2.0f,0.33f,0.12f,0.33f,0.10f,0.075f,0.055f);
-            // Personagem do jogador: corpo, cabeça, braços e pernas em estilo low-poly.
-            draw(playerX,0.48f,playerZ,0.34f,0.72f,0.25f,0.12f,0.19f,0.31f);
-            draw(playerX,1.30f,playerZ,0.43f,0.62f,0.30f,0.08f,0.38f,0.82f);
-            draw(playerX,1.94f,playerZ,0.34f,0.34f,0.34f,0.72f,0.51f,0.36f);
-            draw(playerX-0.29f,1.30f,playerZ,0.16f,0.58f,0.18f,0.72f,0.51f,0.36f);
-            draw(playerX+0.29f,1.30f,playerZ,0.16f,0.58f,0.18f,0.72f,0.51f,0.36f);
-            draw(playerX-0.12f,0.12f,playerZ,0.15f,0.42f,0.19f,0.10f,0.12f,0.17f);
-            draw(playerX+0.12f,0.12f,playerZ,0.15f,0.42f,0.19f,0.10f,0.12f,0.17f);
+            draw(4.55f,1.93f+idle,-2.0f,0.31f,0.32f,0.31f,0.72f,0.50f,0.34f);
+            draw(4.55f,2.10f+idle,-2.0f,0.33f,0.12f,0.33f,0.10f,0.075f,0.055f);
+            drawRotated(4.22f,1.30f,-2.0f,0.15f,0.55f,0.18f,customerSway,0.72f,0.50f,0.34f);
+            drawRotated(4.88f,1.30f,-2.0f,0.15f,0.55f,0.18f,-customerSway,0.72f,0.50f,0.34f);
+            // Jogador com ciclo de caminhada: braços e pernas alternam a passada.
+            boolean walking=now-lastMoveNanos<190000000L;
+            float stride=walking?(float)Math.sin(now/105000000.0)*27f:(float)Math.sin(now/900000000.0)*2f;
+            float bounce=walking?(float)Math.abs(Math.sin(now/105000000.0))*0.055f:0f;
+            draw(playerX,0.48f+bounce,playerZ,0.34f,0.72f,0.25f,0.12f,0.19f,0.31f);
+            draw(playerX,1.30f+bounce,playerZ,0.43f,0.62f,0.30f,0.08f,0.38f,0.82f);
+            draw(playerX,1.94f+bounce,playerZ,0.34f,0.34f,0.34f,0.72f,0.51f,0.36f);
+            drawRotated(playerX-0.29f,1.30f+bounce,playerZ,0.16f,0.58f,0.18f,-stride,0.72f,0.51f,0.36f);
+            drawRotated(playerX+0.29f,1.30f+bounce,playerZ,0.16f,0.58f,0.18f,stride,0.72f,0.51f,0.36f);
+            drawRotated(playerX-0.12f,0.12f+bounce,playerZ,0.15f,0.42f,0.19f,stride,0.10f,0.12f,0.17f);
+            drawRotated(playerX+0.12f,0.12f+bounce,playerZ,0.15f,0.42f,0.19f,-stride,0.10f,0.12f,0.17f);
             // caixas e aparelhos expostos na prateleira
             draw(-5.65f,3.55f,-3.7f,0.42f,0.65f,0.62f,0.12f,0.16f,0.22f);
             draw(-5.65f,3.58f,-3.35f,0.28f,0.48f,0.04f,0.10f,0.50f,0.82f);
