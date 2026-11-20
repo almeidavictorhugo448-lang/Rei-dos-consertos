@@ -85,18 +85,25 @@ public class MainActivity extends Activity {
         FrameLayout.LayoutParams hp=new FrameLayout.LayoutParams(-1,-2,Gravity.TOP); root.addView(hud,hp);
 
         LinearLayout controls=new LinearLayout(this);
-        controls.setGravity(Gravity.CENTER);
-        controls.setPadding(12,10,12,10);
+        controls.setOrientation(LinearLayout.VERTICAL);
+        controls.setPadding(10,8,10,8);
         controls.setBackground(round(0xE60A1420));
-        String[] names={"CHAMAR CLIENTE","PEÇAS","INSTALAR","TESTAR","ENTREGAR","COMPRAR"};
-        for(int i=0;i<names.length;i++){
-            final int id=i;
-            Button bt=new Button(this); bt.setText(names[i]); bt.setTextSize(11); bt.setTextColor(Color.WHITE);
-            bt.setAllCaps(false); bt.setBackground(round(i==0?0xFF16A085:0xFF24445F));
-            LinearLayout.LayoutParams bp=new LinearLayout.LayoutParams(0,58,1); bp.setMargins(4,0,4,0); controls.addView(bt,bp);
-            bt.setOnClickListener(v->action(id));
+        String[] names={"CHAMAR","PEÇAS","INSTALAR","TESTAR","ENTREGAR","LOJA"};
+        for(int rowIndex=0;rowIndex<2;rowIndex++){
+            LinearLayout row=new LinearLayout(this);row.setGravity(Gravity.CENTER);
+            LinearLayout.LayoutParams rp=new LinearLayout.LayoutParams(-1,-2);
+            if(rowIndex==1)rp.topMargin=dp(5);
+            controls.addView(row,rp);
+            for(int col=0;col<3;col++){
+                final int id=rowIndex*3+col;
+                Button bt=new Button(this);bt.setText(names[id]);bt.setTextSize(11);bt.setTextColor(Color.WHITE);
+                bt.setAllCaps(false);bt.setMinHeight(dp(44));bt.setPadding(2,0,2,0);
+                bt.setBackground(round(id==0?0xFF16A085:0xFF24445F));
+                LinearLayout.LayoutParams bp=new LinearLayout.LayoutParams(0,dp(46),1);bp.setMargins(4,0,4,0);row.addView(bt,bp);
+                bt.setOnClickListener(v->action(id));
+            }
         }
-        FrameLayout.LayoutParams cp=new FrameLayout.LayoutParams(-1,-2,Gravity.BOTTOM); root.addView(controls,cp);
+        FrameLayout.LayoutParams cp=new FrameLayout.LayoutParams(-1,-2,Gravity.BOTTOM);root.addView(controls,cp);
         setContentView(root);
     }
     void loadStorefront(ImageView target){
